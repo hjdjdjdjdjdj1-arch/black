@@ -1,4 +1,4 @@
--- ESP + AIMBOT CORRIGIDO (SEM MOUSE ANDANDO SOZINHO)
+-- ESP + AIMBOT PARA CELULAR/CONSOLE (CORRIGIDO)
 -- Coloque em: StarterPlayer > StarterPlayerScripts
 
 local Players = game:GetService("Players")
@@ -19,33 +19,35 @@ local COR_BRANCA = Color3.fromRGB(255, 255, 255)
 
 local alvoAtual = nil
 local objetosESP = {}
-local aimbotBloqueado = false -- Evita movimentação contínua
 
--- FUNÇÃO PARA CRIAR UI DO JOGADOR
+-- FUNÇÃO PARA CRIAR UI DO JOGADOR (OTIMIZADO PARA CELULAR)
 local function criarESP(jogador)
     local tela = Instance.new("ScreenGui")
     tela.Name = jogador.Name .. "_ESP"
     tela.ResetOnSpawn = false
+    tela.DisplayOrder = 999 -- Garante que fique na frente
     
-    -- Box do jogador
+    -- Box do jogador (ajustado para celular)
     local box = Instance.new("Frame")
     box.Name = "Box"
     box.BackgroundTransparency = 0.7
     box.BackgroundColor3 = COR_VERDE
-    box.BorderSizePixel = 2
+    box.BorderSizePixel = 3
     box.BorderColor3 = COR_VERDE
     box.Visible = true
     box.Parent = tela
     
-    -- Nome do jogador
+    -- Nome do jogador (texto maior para celular)
     local nome = Instance.new("TextLabel")
     nome.Name = "Nome"
     nome.Text = jogador.Name
     nome.TextColor3 = COR_BRANCA
-    nome.TextSize = 14
+    nome.TextSize = 18
     nome.Font = Enum.Font.GothamBold
     nome.BackgroundTransparency = 1
-    nome.Size = UDim2.new(0, 200, 0, 20)
+    nome.TextStrokeTransparency = 0.2
+    nome.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    nome.Size = UDim2.new(0, 250, 0, 25)
     nome.Parent = tela
     
     -- Distância
@@ -53,10 +55,12 @@ local function criarESP(jogador)
     distancia.Name = "Distancia"
     distancia.Text = "0m"
     distancia.TextColor3 = COR_BRANCA
-    distancia.TextSize = 12
+    distancia.TextSize = 16
     distancia.Font = Enum.Font.Gotham
     distancia.BackgroundTransparency = 1
-    distancia.Size = UDim2.new(0, 100, 0, 16)
+    distancia.TextStrokeTransparency = 0.2
+    distancia.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    distancia.Size = UDim2.new(0, 120, 0, 20)
     distancia.Parent = tela
     
     return {
@@ -67,22 +71,11 @@ local function criarESP(jogador)
     }
 end
 
--- FUNÇÃO PARA VERIFICAR SE HÁ JOGADORES VÁLIDOS
-local function temJogadoresValidos()
-    for _, jogador in pairs(Players:GetPlayers()) do
-        if jogador ~= localPlayer and jogador.Character then
-            local humanoide = jogador.Character:FindFirstChild("Humanoid")
-            if humanoide and humanoide.Health > 0 then
-                return true
-            end
-        end
-    end
-    return false
-end
-
--- FUNÇÃO PARA ATUALIZAR ESP
+-- FUNÇÃO PARA ATUALIZAR ESP (CORRIGIDA PARA CELULAR)
 local function atualizarESP()
     if not ESP_ATIVO then return end
+    
+    local viewportSize = Camera.ViewportSize
     
     for _, jogador in pairs(Players:GetPlayers()) do
         if jogador ~= localPlayer and jogador.Character then
@@ -93,25 +86,32 @@ local function atualizarESP()
             end
             
             local personagem = jogador.Character
-            local torso = personagem:FindFirstChild("HumanoidRootPart") or personagem:FindFirstChild("Torso")
+            local torso = personagem:FindFirstChild("HumanoidRootPart") or personagem:FindFirstChild("Torso") or personagem:FindFirstChild("UpperTorso")
             local humanoide = personagem:FindFirstChild("Humanoid")
             
             if torso and humanoide and humanoide.Health > 0 then
                 -- Posição na tela
                 local posicaoTela, naTela = Camera:WorldToViewportPoint(torso.Position)
                 
-                if naTela then
+                -- Verifica se está dentro da tela (com margem)
+                if naTela and posicaoTela.X > 0 and posicaoTela.X < viewportSize.X and 
+                   posicaoTela.Y > 0 and posicaoTela.Y < viewportSize.Y then
+                    
                     -- Calcular distância
                     local distancia = (torso.Position - Camera.CFrame.Position).Magnitude
                     local distanciaMetros = math.floor(distancia)
                     
-                    -- Tamanho da box baseado na distância
-                    local alturaBox = math.clamp(200 / distancia, 40, 150)
-                    local larguraBox = math.clamp(100 / distancia, 20, 80)
+                    -- Tamanho da box baseado na distância (ajustado para celular)
+                    local alturaBox = math.clamp(300 / distancia, 50, 200)
+                    local larguraBox = math.clamp(150 / distancia, 30, 120)
                     
-                    -- Posicionar box
+                    -- Posicionar box (CORRIGIDO - não vai mais para baixo da tela)
                     local boxX = posicaoTela.X - (larguraBox / 2)
-                    local boxY = posicaoTela.Y - (alturaBox / 1.5)
+                    local boxY = posicaoTela.Y - (alturaBox / 2) -- Mudado de 1.5 para 2
+                    
+                    -- Garantir que a box não saia da tela
+                    boxX = math.clamp(boxX, 0, viewportSize.X - larguraBox)
+                    boxY = math.clamp(boxY, 0, viewportSize.Y - alturaBox)
                     
                     objetosESP[jogador].Box.Position = UDim2.new(0, boxX, 0, boxY)
                     objetosESP[jogador].Box.Size = UDim2.new(0, larguraBox, 0, alturaBox)
@@ -127,19 +127,30 @@ local function atualizarESP()
                     
                     objetosESP[jogador].Box.Visible = true
                     
-                    -- Posicionar nome
+                    -- Posicionar nome (acima da box)
                     local nomeX = posicaoTela.X - (objetosESP[jogador].Nome.TextBounds.X / 2)
-                    local nomeY = boxY - 22
+                    local nomeY = boxY - 28
+                    
+                    -- Garantir que o nome não saia da tela
+                    nomeX = math.clamp(nomeX, 5, viewportSize.X - objetosESP[jogador].Nome.TextBounds.X - 5)
+                    nomeY = math.max(nomeY, 5)
+                    
                     objetosESP[jogador].Nome.Position = UDim2.new(0, nomeX, 0, nomeY)
                     objetosESP[jogador].Nome.Visible = true
                     
-                    -- Posicionar distância
-                    local distY = boxY + alturaBox + 2
+                    -- Posicionar distância (abaixo da box)
+                    local distY = boxY + alturaBox + 5
                     local distX = posicaoTela.X - (objetosESP[jogador].Distancia.TextBounds.X / 2)
+                    
+                    -- Garantir que a distância não saia da tela
+                    distX = math.clamp(distX, 5, viewportSize.X - objetosESP[jogador].Distancia.TextBounds.X - 5)
+                    distY = math.min(distY, viewportSize.Y - 25)
+                    
                     objetosESP[jogador].Distancia.Position = UDim2.new(0, distX, 0, distY)
                     objetosESP[jogador].Distancia.Text = distanciaMetros .. "m"
                     objetosESP[jogador].Distancia.Visible = true
                 else
+                    -- Fora da tela, esconder elementos
                     objetosESP[jogador].Box.Visible = false
                     objetosESP[jogador].Nome.Visible = false
                     objetosESP[jogador].Distancia.Visible = false
@@ -156,9 +167,21 @@ local function atualizarESP()
     end
 end
 
--- FUNÇÃO PARA ENCONTRAR MELHOR ALVO (MAIS PRÓXIMO DO CENTRO DA TELA)
+-- FUNÇÃO PARA VERIFICAR SE HÁ JOGADORES VÁLIDOS
+local function temJogadoresValidos()
+    for _, jogador in pairs(Players:GetPlayers()) do
+        if jogador ~= localPlayer and jogador.Character then
+            local humanoide = jogador.Character:FindFirstChild("Humanoid")
+            if humanoide and humanoide.Health > 0 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- FUNÇÃO PARA ENCONTRAR MELHOR ALVO
 local function encontrarAlvo()
-    -- Só procura alvo se tiver jogadores válidos
     if not temJogadoresValidos() then
         return nil
     end
@@ -166,7 +189,6 @@ local function encontrarAlvo()
     local melhorAlvo = nil
     local menorDistanciaCentro = math.huge
     local centroTela = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    local temAlvoVisivel = false
     
     for _, jogador in pairs(Players:GetPlayers()) do
         if jogador ~= localPlayer and jogador.Character then
@@ -177,13 +199,12 @@ local function encontrarAlvo()
             if cabeca and humanoide and humanoide.Health > 0 then
                 local posTela, visivel = Camera:WorldToViewportPoint(cabeca.Position)
                 
-                if visivel then
-                    -- Distância do centro da tela
+                if visivel and posTela.X > 0 and posTela.X < Camera.ViewportSize.X and
+                   posTela.Y > 0 and posTela.Y < Camera.ViewportSize.Y then
+                    
                     local distanciaCentro = (Vector2.new(posTela.X, posTela.Y) - centroTela).Magnitude
                     
-                    -- Raio de mira (250 pixels do centro)
-                    if distanciaCentro < 250 and distanciaCentro < menorDistanciaCentro then
-                        -- Verificar se não tem parede
+                    if distanciaCentro < 300 and distanciaCentro < menorDistanciaCentro then
                         local raycast = RaycastParams.new()
                         raycast.FilterType = Enum.RaycastFilterType.Blacklist
                         raycast.FilterDescendantsInstances = {localPlayer.Character, personagem}
@@ -196,7 +217,6 @@ local function encontrarAlvo()
                         if not resultado or resultado.Instance:IsDescendantOf(personagem) then
                             menorDistanciaCentro = distanciaCentro
                             melhorAlvo = jogador
-                            temAlvoVisivel = true
                         end
                     end
                 end
@@ -204,15 +224,10 @@ local function encontrarAlvo()
         end
     end
     
-    -- Só retorna alvo se estiver próximo o suficiente do centro
-    if temAlvoVisivel and menorDistanciaCentro < 250 then
-        return melhorAlvo
-    end
-    
-    return nil
+    return melhorAlvo
 end
 
--- FUNÇÃO PARA MIRAR NO ALVO (MIRA NA CABEÇA - COM LIMITE DE MOVIMENTO)
+-- FUNÇÃO PARA MIRAR NO ALVO (OTIMIZADA)
 local function mirarNoAlvo(alvo)
     if not alvo or not alvo.Character then return end
     
@@ -224,74 +239,61 @@ local function mirarNoAlvo(alvo)
         local centroTela = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
         local diferenca = Vector2.new(posTela.X - centroTela.X, posTela.Y - centroTela.Y)
         
-        -- SÓ move o mouse se a diferença for significativa (evita micro-movimentos)
-        if math.abs(diferenca.X) > 10 or math.abs(diferenca.Y) > 10 then
-            -- Movimento suave e limitado
-            local moveX = math.clamp(diferenca.X * 0.2, -15, 15)
-            local moveY = math.clamp(diferenca.Y * 0.2, -15, 15)
+        if math.abs(diferenca.X) > 15 or math.abs(diferenca.Y) > 15 then
+            local moveX = math.clamp(diferenca.X * 0.25, -20, 20)
+            local moveY = math.clamp(diferenca.Y * 0.25, -20, 20)
             
             if math.abs(moveX) > 1 or math.abs(moveY) > 1 then
-                mousemoverel(moveX, moveY)
+                local UIS = game:GetService("UserInputService")
+                local posAtual = UIS:GetMouseLocation()
+                local novaX = math.clamp(posAtual.X + moveX, 0, Camera.ViewportSize.X)
+                local novaY = math.clamp(posAtual.Y + moveY, 0, Camera.ViewportSize.Y)
+                
+                UIS.MouseBehavior = Enum.MouseBehavior.Default
+                UIS:SetMouseLocation(novaX, novaY)
             end
         end
     end
 end
 
--- FUNÇÃO PARA MOVER MOUSE (SEGURA)
-local function mousemoverel(deltaX, deltaY)
-    -- Só move se o jogo estiver em foco
-    local UIS = game:GetService("UserInputService")
-    
-    -- Verifica se o mouse está dentro da janela do jogo
-    local posAtual = UIS:GetMouseLocation()
-    local viewportSize = Camera.ViewportSize
-    
-    -- Calcula nova posição
-    local novaX = math.clamp(posAtual.X + deltaX, 0, viewportSize.X)
-    local novaY = math.clamp(posAtual.Y + deltaY, 0, viewportSize.Y)
-    
-    -- Só move se a nova posição for diferente
-    if math.abs(novaX - posAtual.X) > 0.5 or math.abs(novaY - posAtual.Y) > 0.5 then
-        UIS.MouseBehavior = Enum.MouseBehavior.Default
-        UIS:SetMouseLocation(novaX, novaY)
-    end
-end
-
--- CRIAR INTERFACE DE CONTROLE
+-- CRIAR INTERFACE DE CONTROLE (OTIMIZADA PARA CELULAR)
 local function criarUI()
     local telaUI = Instance.new("ScreenGui")
     telaUI.Name = "MenuESP"
     telaUI.ResetOnSpawn = false
+    telaUI.DisplayOrder = 1000
     telaUI.Parent = localPlayer.PlayerGui
     
-    -- Fundo do menu
+    -- Menu adaptado para toque (botões maiores)
     local menu = Instance.new("Frame")
-    menu.Size = UDim2.new(0, 150, 0, 80)
+    menu.Size = UDim2.new(0, 180, 0, 100)
     menu.Position = UDim2.new(0, 10, 0, 10)
     menu.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    menu.BackgroundTransparency = 0.5
-    menu.BorderSizePixel = 2
+    menu.BackgroundTransparency = 0.6
+    menu.BorderSizePixel = 3
     menu.BorderColor3 = COR_VERDE
     menu.Parent = telaUI
     
-    -- Botão ESP
+    -- Botão ESP (maior para celular)
     local btnESP = Instance.new("TextButton")
-    btnESP.Size = UDim2.new(0, 130, 0, 30)
+    btnESP.Size = UDim2.new(0, 160, 0, 35)
     btnESP.Position = UDim2.new(0, 10, 0, 10)
     btnESP.Text = "ESP: LIGADO"
     btnESP.TextColor3 = COR_VERDE
+    btnESP.TextSize = 18
     btnESP.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    btnESP.BorderSizePixel = 1
+    btnESP.BorderSizePixel = 2
     btnESP.Parent = menu
     
-    -- Botão AIMBOT
+    -- Botão AIMBOT (maior para celular)
     local btnAimbot = Instance.new("TextButton")
-    btnAimbot.Size = UDim2.new(0, 130, 0, 30)
-    btnAimbot.Position = UDim2.new(0, 10, 0, 45)
+    btnAimbot.Size = UDim2.new(0, 160, 0, 35)
+    btnAimbot.Position = UDim2.new(0, 10, 0, 55)
     btnAimbot.Text = "AIMBOT: LIGADO"
     btnAimbot.TextColor3 = COR_VERDE
+    btnAimbot.TextSize = 18
     btnAimbot.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    btnAimbot.BorderSizePixel = 1
+    btnAimbot.BorderSizePixel = 2
     btnAimbot.Parent = menu
     
     -- Funções dos botões
@@ -300,9 +302,11 @@ local function criarUI()
         if ESP_ATIVO then
             btnESP.Text = "ESP: LIGADO"
             btnESP.TextColor3 = COR_VERDE
+            menu.BorderColor3 = COR_VERDE
         else
             btnESP.Text = "ESP: DESLIGADO"
             btnESP.TextColor3 = COR_VERMELHA
+            menu.BorderColor3 = COR_VERMELHA
             -- Limpar ESP
             for _, obj in pairs(objetosESP) do
                 if obj and obj.GUI then
@@ -328,27 +332,22 @@ end
 
 -- LOOP PRINCIPAL
 RunService.RenderStepped:Connect(function()
-    -- Atualizar ESP
     atualizarESP()
     
-    -- Aimbot (só se estiver ativo)
     if AIMBOT_ATIVO and ESP_ATIVO then
         local novoAlvo = encontrarAlvo()
-        
-        -- Só atualiza o alvo se houver um válido
         if novoAlvo then
             alvoAtual = novoAlvo
             mirarNoAlvo(alvoAtual)
         else
             alvoAtual = nil
-            aimbotBloqueado = false
         end
     else
         alvoAtual = nil
     end
 end)
 
--- QUANDO NOVOS JOGADORES ENTRAM
+-- EVENTOS DE JOGADORES
 Players.PlayerAdded:Connect(function(jogador)
     if jogador ~= localPlayer then
         task.wait(1)
@@ -359,7 +358,6 @@ Players.PlayerAdded:Connect(function(jogador)
     end
 end)
 
--- QUANDO JOGADORES SAEM
 Players.PlayerRemoving:Connect(function(jogador)
     if objetosESP[jogador] then
         objetosESP[jogador].GUI:Destroy()
@@ -382,5 +380,6 @@ for _, jogador in pairs(Players:GetPlayers()) do
     end
 end
 
-print("✅ ESP + AIMBOT CARREGADO!")
-print("🎯 Mouse SÓ move quando tem inimigo na mira!")
+print("✅ ESP + AIMBOT PARA CELULAR CARREGADO!")
+print("📱 Otimizado para dispositivos móveis")
+print("🎯 Box agora posicionada corretamente na tela")
