@@ -97,7 +97,7 @@ local function atualizarESP()
                         
                         -- Posição centralizada
                         local boxX = pos.X - (largura / 2)
-                        local boxY = pos.Y - (altura / 2.2)
+                        local boxY = pos.Y - (altura / 1)
                         
                         -- Limitar na tela
                         boxX = math.clamp(boxX, 0, viewportX - largura)
