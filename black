@@ -1,0 +1,386 @@
+-- ESP + AIMBOT CORRIGIDO (SEM MOUSE ANDANDO SOZINHO)
+-- Coloque em: StarterPlayer > StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+
+local localPlayer = Players.LocalPlayer
+local Mouse = localPlayer:GetMouse()
+
+-- Configurações
+local ESP_ATIVO = true
+local AIMBOT_ATIVO = true
+
+-- Cores
+local COR_VERDE = Color3.fromRGB(0, 255, 0)
+local COR_VERMELHA = Color3.fromRGB(255, 0, 0)
+local COR_BRANCA = Color3.fromRGB(255, 255, 255)
+
+local alvoAtual = nil
+local objetosESP = {}
+local aimbotBloqueado = false -- Evita movimentação contínua
+
+-- FUNÇÃO PARA CRIAR UI DO JOGADOR
+local function criarESP(jogador)
+    local tela = Instance.new("ScreenGui")
+    tela.Name = jogador.Name .. "_ESP"
+    tela.ResetOnSpawn = false
+    
+    -- Box do jogador
+    local box = Instance.new("Frame")
+    box.Name = "Box"
+    box.BackgroundTransparency = 0.7
+    box.BackgroundColor3 = COR_VERDE
+    box.BorderSizePixel = 2
+    box.BorderColor3 = COR_VERDE
+    box.Visible = true
+    box.Parent = tela
+    
+    -- Nome do jogador
+    local nome = Instance.new("TextLabel")
+    nome.Name = "Nome"
+    nome.Text = jogador.Name
+    nome.TextColor3 = COR_BRANCA
+    nome.TextSize = 14
+    nome.Font = Enum.Font.GothamBold
+    nome.BackgroundTransparency = 1
+    nome.Size = UDim2.new(0, 200, 0, 20)
+    nome.Parent = tela
+    
+    -- Distância
+    local distancia = Instance.new("TextLabel")
+    distancia.Name = "Distancia"
+    distancia.Text = "0m"
+    distancia.TextColor3 = COR_BRANCA
+    distancia.TextSize = 12
+    distancia.Font = Enum.Font.Gotham
+    distancia.BackgroundTransparency = 1
+    distancia.Size = UDim2.new(0, 100, 0, 16)
+    distancia.Parent = tela
+    
+    return {
+        GUI = tela,
+        Box = box,
+        Nome = nome,
+        Distancia = distancia
+    }
+end
+
+-- FUNÇÃO PARA VERIFICAR SE HÁ JOGADORES VÁLIDOS
+local function temJogadoresValidos()
+    for _, jogador in pairs(Players:GetPlayers()) do
+        if jogador ~= localPlayer and jogador.Character then
+            local humanoide = jogador.Character:FindFirstChild("Humanoid")
+            if humanoide and humanoide.Health > 0 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- FUNÇÃO PARA ATUALIZAR ESP
+local function atualizarESP()
+    if not ESP_ATIVO then return end
+    
+    for _, jogador in pairs(Players:GetPlayers()) do
+        if jogador ~= localPlayer and jogador.Character then
+            -- Criar ESP se não existir
+            if not objetosESP[jogador] then
+                objetosESP[jogador] = criarESP(jogador)
+                objetosESP[jogador].GUI.Parent = localPlayer.PlayerGui
+            end
+            
+            local personagem = jogador.Character
+            local torso = personagem:FindFirstChild("HumanoidRootPart") or personagem:FindFirstChild("Torso")
+            local humanoide = personagem:FindFirstChild("Humanoid")
+            
+            if torso and humanoide and humanoide.Health > 0 then
+                -- Posição na tela
+                local posicaoTela, naTela = Camera:WorldToViewportPoint(torso.Position)
+                
+                if naTela then
+                    -- Calcular distância
+                    local distancia = (torso.Position - Camera.CFrame.Position).Magnitude
+                    local distanciaMetros = math.floor(distancia)
+                    
+                    -- Tamanho da box baseado na distância
+                    local alturaBox = math.clamp(200 / distancia, 40, 150)
+                    local larguraBox = math.clamp(100 / distancia, 20, 80)
+                    
+                    -- Posicionar box
+                    local boxX = posicaoTela.X - (larguraBox / 2)
+                    local boxY = posicaoTela.Y - (alturaBox / 1.5)
+                    
+                    objetosESP[jogador].Box.Position = UDim2.new(0, boxX, 0, boxY)
+                    objetosESP[jogador].Box.Size = UDim2.new(0, larguraBox, 0, alturaBox)
+                    
+                    -- Box VERMELHA se for o alvo
+                    if jogador == alvoAtual and AIMBOT_ATIVO then
+                        objetosESP[jogador].Box.BorderColor3 = COR_VERMELHA
+                        objetosESP[jogador].Nome.TextColor3 = COR_VERMELHA
+                    else
+                        objetosESP[jogador].Box.BorderColor3 = COR_VERDE
+                        objetosESP[jogador].Nome.TextColor3 = COR_BRANCA
+                    end
+                    
+                    objetosESP[jogador].Box.Visible = true
+                    
+                    -- Posicionar nome
+                    local nomeX = posicaoTela.X - (objetosESP[jogador].Nome.TextBounds.X / 2)
+                    local nomeY = boxY - 22
+                    objetosESP[jogador].Nome.Position = UDim2.new(0, nomeX, 0, nomeY)
+                    objetosESP[jogador].Nome.Visible = true
+                    
+                    -- Posicionar distância
+                    local distY = boxY + alturaBox + 2
+                    local distX = posicaoTela.X - (objetosESP[jogador].Distancia.TextBounds.X / 2)
+                    objetosESP[jogador].Distancia.Position = UDim2.new(0, distX, 0, distY)
+                    objetosESP[jogador].Distancia.Text = distanciaMetros .. "m"
+                    objetosESP[jogador].Distancia.Visible = true
+                else
+                    objetosESP[jogador].Box.Visible = false
+                    objetosESP[jogador].Nome.Visible = false
+                    objetosESP[jogador].Distancia.Visible = false
+                end
+            else
+                objetosESP[jogador].Box.Visible = false
+                objetosESP[jogador].Nome.Visible = false
+                objetosESP[jogador].Distancia.Visible = false
+            end
+        elseif objetosESP[jogador] then
+            objetosESP[jogador].GUI:Destroy()
+            objetosESP[jogador] = nil
+        end
+    end
+end
+
+-- FUNÇÃO PARA ENCONTRAR MELHOR ALVO (MAIS PRÓXIMO DO CENTRO DA TELA)
+local function encontrarAlvo()
+    -- Só procura alvo se tiver jogadores válidos
+    if not temJogadoresValidos() then
+        return nil
+    end
+    
+    local melhorAlvo = nil
+    local menorDistanciaCentro = math.huge
+    local centroTela = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local temAlvoVisivel = false
+    
+    for _, jogador in pairs(Players:GetPlayers()) do
+        if jogador ~= localPlayer and jogador.Character then
+            local personagem = jogador.Character
+            local cabeca = personagem:FindFirstChild("Head") or personagem:FindFirstChild("HumanoidRootPart")
+            local humanoide = personagem:FindFirstChild("Humanoid")
+            
+            if cabeca and humanoide and humanoide.Health > 0 then
+                local posTela, visivel = Camera:WorldToViewportPoint(cabeca.Position)
+                
+                if visivel then
+                    -- Distância do centro da tela
+                    local distanciaCentro = (Vector2.new(posTela.X, posTela.Y) - centroTela).Magnitude
+                    
+                    -- Raio de mira (250 pixels do centro)
+                    if distanciaCentro < 250 and distanciaCentro < menorDistanciaCentro then
+                        -- Verificar se não tem parede
+                        local raycast = RaycastParams.new()
+                        raycast.FilterType = Enum.RaycastFilterType.Blacklist
+                        raycast.FilterDescendantsInstances = {localPlayer.Character, personagem}
+                        
+                        local origem = Camera.CFrame.Position
+                        local direcao = (cabeca.Position - origem).Unit
+                        local distancia = (cabeca.Position - origem).Magnitude
+                        local resultado = workspace:Raycast(origem, direcao * distancia, raycast)
+                        
+                        if not resultado or resultado.Instance:IsDescendantOf(personagem) then
+                            menorDistanciaCentro = distanciaCentro
+                            melhorAlvo = jogador
+                            temAlvoVisivel = true
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Só retorna alvo se estiver próximo o suficiente do centro
+    if temAlvoVisivel and menorDistanciaCentro < 250 then
+        return melhorAlvo
+    end
+    
+    return nil
+end
+
+-- FUNÇÃO PARA MIRAR NO ALVO (MIRA NA CABEÇA - COM LIMITE DE MOVIMENTO)
+local function mirarNoAlvo(alvo)
+    if not alvo or not alvo.Character then return end
+    
+    local personagem = alvo.Character
+    local cabeca = personagem:FindFirstChild("Head") or personagem:FindFirstChild("HumanoidRootPart")
+    
+    if cabeca then
+        local posTela = Camera:WorldToViewportPoint(cabeca.Position)
+        local centroTela = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        local diferenca = Vector2.new(posTela.X - centroTela.X, posTela.Y - centroTela.Y)
+        
+        -- SÓ move o mouse se a diferença for significativa (evita micro-movimentos)
+        if math.abs(diferenca.X) > 10 or math.abs(diferenca.Y) > 10 then
+            -- Movimento suave e limitado
+            local moveX = math.clamp(diferenca.X * 0.2, -15, 15)
+            local moveY = math.clamp(diferenca.Y * 0.2, -15, 15)
+            
+            if math.abs(moveX) > 1 or math.abs(moveY) > 1 then
+                mousemoverel(moveX, moveY)
+            end
+        end
+    end
+end
+
+-- FUNÇÃO PARA MOVER MOUSE (SEGURA)
+local function mousemoverel(deltaX, deltaY)
+    -- Só move se o jogo estiver em foco
+    local UIS = game:GetService("UserInputService")
+    
+    -- Verifica se o mouse está dentro da janela do jogo
+    local posAtual = UIS:GetMouseLocation()
+    local viewportSize = Camera.ViewportSize
+    
+    -- Calcula nova posição
+    local novaX = math.clamp(posAtual.X + deltaX, 0, viewportSize.X)
+    local novaY = math.clamp(posAtual.Y + deltaY, 0, viewportSize.Y)
+    
+    -- Só move se a nova posição for diferente
+    if math.abs(novaX - posAtual.X) > 0.5 or math.abs(novaY - posAtual.Y) > 0.5 then
+        UIS.MouseBehavior = Enum.MouseBehavior.Default
+        UIS:SetMouseLocation(novaX, novaY)
+    end
+end
+
+-- CRIAR INTERFACE DE CONTROLE
+local function criarUI()
+    local telaUI = Instance.new("ScreenGui")
+    telaUI.Name = "MenuESP"
+    telaUI.ResetOnSpawn = false
+    telaUI.Parent = localPlayer.PlayerGui
+    
+    -- Fundo do menu
+    local menu = Instance.new("Frame")
+    menu.Size = UDim2.new(0, 150, 0, 80)
+    menu.Position = UDim2.new(0, 10, 0, 10)
+    menu.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    menu.BackgroundTransparency = 0.5
+    menu.BorderSizePixel = 2
+    menu.BorderColor3 = COR_VERDE
+    menu.Parent = telaUI
+    
+    -- Botão ESP
+    local btnESP = Instance.new("TextButton")
+    btnESP.Size = UDim2.new(0, 130, 0, 30)
+    btnESP.Position = UDim2.new(0, 10, 0, 10)
+    btnESP.Text = "ESP: LIGADO"
+    btnESP.TextColor3 = COR_VERDE
+    btnESP.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btnESP.BorderSizePixel = 1
+    btnESP.Parent = menu
+    
+    -- Botão AIMBOT
+    local btnAimbot = Instance.new("TextButton")
+    btnAimbot.Size = UDim2.new(0, 130, 0, 30)
+    btnAimbot.Position = UDim2.new(0, 10, 0, 45)
+    btnAimbot.Text = "AIMBOT: LIGADO"
+    btnAimbot.TextColor3 = COR_VERDE
+    btnAimbot.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btnAimbot.BorderSizePixel = 1
+    btnAimbot.Parent = menu
+    
+    -- Funções dos botões
+    btnESP.MouseButton1Click:Connect(function()
+        ESP_ATIVO = not ESP_ATIVO
+        if ESP_ATIVO then
+            btnESP.Text = "ESP: LIGADO"
+            btnESP.TextColor3 = COR_VERDE
+        else
+            btnESP.Text = "ESP: DESLIGADO"
+            btnESP.TextColor3 = COR_VERMELHA
+            -- Limpar ESP
+            for _, obj in pairs(objetosESP) do
+                if obj and obj.GUI then
+                    obj.GUI:Destroy()
+                end
+            end
+            objetosESP = {}
+        end
+    end)
+    
+    btnAimbot.MouseButton1Click:Connect(function()
+        AIMBOT_ATIVO = not AIMBOT_ATIVO
+        if AIMBOT_ATIVO then
+            btnAimbot.Text = "AIMBOT: LIGADO"
+            btnAimbot.TextColor3 = COR_VERDE
+        else
+            btnAimbot.Text = "AIMBOT: DESLIGADO"
+            btnAimbot.TextColor3 = COR_VERMELHA
+            alvoAtual = nil
+        end
+    end)
+end
+
+-- LOOP PRINCIPAL
+RunService.RenderStepped:Connect(function()
+    -- Atualizar ESP
+    atualizarESP()
+    
+    -- Aimbot (só se estiver ativo)
+    if AIMBOT_ATIVO and ESP_ATIVO then
+        local novoAlvo = encontrarAlvo()
+        
+        -- Só atualiza o alvo se houver um válido
+        if novoAlvo then
+            alvoAtual = novoAlvo
+            mirarNoAlvo(alvoAtual)
+        else
+            alvoAtual = nil
+            aimbotBloqueado = false
+        end
+    else
+        alvoAtual = nil
+    end
+end)
+
+-- QUANDO NOVOS JOGADORES ENTRAM
+Players.PlayerAdded:Connect(function(jogador)
+    if jogador ~= localPlayer then
+        task.wait(1)
+        if ESP_ATIVO and not objetosESP[jogador] then
+            objetosESP[jogador] = criarESP(jogador)
+            objetosESP[jogador].GUI.Parent = localPlayer.PlayerGui
+        end
+    end
+end)
+
+-- QUANDO JOGADORES SAEM
+Players.PlayerRemoving:Connect(function(jogador)
+    if objetosESP[jogador] then
+        objetosESP[jogador].GUI:Destroy()
+        objetosESP[jogador] = nil
+    end
+    if alvoAtual == jogador then
+        alvoAtual = nil
+    end
+end)
+
+-- INICIALIZAR
+criarUI()
+
+-- Criar ESP para jogadores existentes
+task.wait(1)
+for _, jogador in pairs(Players:GetPlayers()) do
+    if jogador ~= localPlayer then
+        objetosESP[jogador] = criarESP(jogador)
+        objetosESP[jogador].GUI.Parent = localPlayer.PlayerGui
+    end
+end
+
+print("✅ ESP + AIMBOT CARREGADO!")
+print("🎯 Mouse SÓ move quando tem inimigo na mira!")
