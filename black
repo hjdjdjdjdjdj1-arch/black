@@ -13,7 +13,7 @@ local AIMBOT_LIGADO = true
 
 -- CONFIGURAÇÕES DO AIMBOT (VELOCIDADE MÁXIMA)
 local AIM_CONFIG = {
-    VELOCIDADE = 5000,      -- Velocidade MÁXIMA (0.95 = praticamente instantâneo)
+    VELOCIDADE = 5000,      -- Velocidade MÁXIMA (5000 = praticamente instantâneo)
     FOV = 360,              -- Campo de visão TOTAL (mira qualquer lugar da tela)
     DISTANCIA_MAX = 1000,   -- Distância máxima (bem longe)
     MIRA_CABECA = true,     -- Mirar na cabeça
