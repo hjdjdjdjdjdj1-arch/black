@@ -1,4 +1,4 @@
--- ESP + AIMBOT RÁPIDO PARA CELULAR
+-- ESP + AIMBOT VELOCIDADE MÁXIMA (INSTANTÂNEO)
 -- Coloque em: StarterPlayer > StarterPlayerScripts
 
 local Players = game:GetService("Players")
@@ -11,12 +11,13 @@ local localPlayer = Players.LocalPlayer
 local ESP_LIGADO = true
 local AIMBOT_LIGADO = true
 
--- CONFIGURAÇÕES DO AIMBOT (OTIMIZADO PARA CELULAR)
+-- CONFIGURAÇÕES DO AIMBOT (VELOCIDADE MÁXIMA)
 local AIM_CONFIG = {
-    VELOCIDADE = 0.5,      -- Velocidade da mira (0.3 = lento, 0.7 = rápido, 0.9 = muito rápido)
-    FOV = 300,              -- Campo de visão (pixels do centro)
-    DISTANCIA_MAX = 300,    -- Distância máxima em studs
+    VELOCIDADE = 0.95,      -- Velocidade MÁXIMA (0.95 = praticamente instantâneo)
+    FOV = 999,              -- Campo de visão TOTAL (mira qualquer lugar da tela)
+    DISTANCIA_MAX = 1000,   -- Distância máxima (bem longe)
     MIRA_CABECA = true,     -- Mirar na cabeça
+    INSTANTANEO = true,     -- Modo instantâneo (sem suavidade)
 }
 
 -- CORES
@@ -28,7 +29,7 @@ local AMARELO = Color3.fromRGB(255, 255, 0)
 local alvoAtual = nil
 local elementosESP = {}
 
--- FUNÇÃO PARA CRIAR ESP (SIMPLIFICADO)
+-- FUNÇÃO PARA CRIAR ESP
 local function criarESP(jogador)
     local gui = Instance.new("ScreenGui")
     gui.Name = jogador.Name
@@ -88,25 +89,20 @@ local function atualizarESP()
                     local pos, visivel = Camera:WorldToViewportPoint(torso.Position)
                     
                     if visivel and pos.X > 0 and pos.X < viewportX and pos.Y > 0 then
-                        -- Calcular distância
                         local distancia = (torso.Position - Camera.CFrame.Position).Magnitude
                         
-                        -- Tamanho dinâmico
                         local altura = math.clamp(250 / distancia, 50, 180)
                         local largura = math.clamp(120 / distancia, 30, 90)
                         
-                        -- Posição centralizada
-                        local boxX = pos.X - (largura / 1)
-                        local boxY = pos.Y - (altura / 1)
+                        local boxX = pos.X - (largura / 2)
+                        local boxY = pos.Y - (altura / 1.8)
                         
-                        -- Limitar na tela
                         boxX = math.clamp(boxX, 0, viewportX - largura)
                         boxY = math.clamp(boxY, 0, viewportY - altura)
                         
                         elementosESP[jogador].box.Position = UDim2.new(0, boxX, 0, boxY)
                         elementosESP[jogador].box.Size = UDim2.new(0, largura, 0, altura)
                         
-                        -- Cor da box (alvo fica vermelho)
                         if jogador == alvoAtual and AIMBOT_LIGADO then
                             elementosESP[jogador].box.BorderColor3 = VERMELHO
                             elementosESP[jogador].nome.TextColor3 = VERMELHO
@@ -117,7 +113,6 @@ local function atualizarESP()
                         
                         elementosESP[jogador].box.Visible = true
                         
-                        -- Nome acima da box
                         local nomeX = pos.X - (elementosESP[jogador].nome.TextBounds.X / 2)
                         local nomeY = boxY - 28
                         nomeX = math.clamp(nomeX, 5, viewportX - 205)
@@ -126,7 +121,6 @@ local function atualizarESP()
                         elementosESP[jogador].nome.Position = UDim2.new(0, nomeX, 0, nomeY)
                         elementosESP[jogador].nome.Visible = true
                         
-                        -- Distância abaixo da box
                         local distX = pos.X - (elementosESP[jogador].dist.TextBounds.X / 2)
                         local distY = boxY + altura + 5
                         distX = math.clamp(distX, 5, viewportX - 105)
@@ -150,7 +144,7 @@ local function atualizarESP()
     end
 end
 
--- AIMBOT RÁPIDO PARA CELULAR
+-- AIMBOT VELOCIDADE MÁXIMA (INSTANTÂNEO)
 local function encontrarAlvoRapido()
     local melhorAlvo = nil
     local menorDistancia = math.huge
@@ -163,7 +157,6 @@ local function encontrarAlvoRapido()
             local humano = char:FindFirstChild("Humanoid")
             
             if humano and humano.Health > 0 then
-                -- Escolher parte do corpo para mirar
                 local parteCorpo
                 if AIM_CONFIG.MIRA_CABECA then
                     parteCorpo = char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
@@ -172,7 +165,6 @@ local function encontrarAlvoRapido()
                 end
                 
                 if parteCorpo then
-                    -- Verificar distância máxima
                     local distanciaMundo = (parteCorpo.Position - Camera.CFrame.Position).Magnitude
                     if distanciaMundo > AIM_CONFIG.DISTANCIA_MAX then
                         continue
@@ -181,27 +173,13 @@ local function encontrarAlvoRapido()
                     local posTela, visivel = Camera:WorldToViewportPoint(parteCorpo.Position)
                     
                     if visivel then
-                        -- Distância do centro da tela
                         local diffX = posTela.X - centroX
                         local diffY = posTela.Y - centroY
                         local distCentro = math.sqrt(diffX^2 + diffY^2)
                         
-                        -- Verificar se está dentro do FOV
                         if distCentro < AIM_CONFIG.FOV and distCentro < menorDistancia then
-                            -- Raycast rápido (opcional, desliga para mais velocidade)
-                            local semParede = true
-                            if false then -- Desligue raycast para mais velocidade no celular
-                                local raycast = RaycastParams.new()
-                                raycast.FilterType = Enum.RaycastFilterType.Blacklist
-                                raycast.FilterDescendantsInstances = {localPlayer.Character, char}
-                                local resultado = workspace:Raycast(Camera.CFrame.Position, (parteCorpo.Position - Camera.CFrame.Position).Unit * distanciaMundo, raycast)
-                                semParede = (not resultado or resultado.Instance:IsDescendantOf(char))
-                            end
-                            
-                            if semParede then
-                                menorDistancia = distCentro
-                                melhorAlvo = jogador
-                            end
+                            menorDistancia = distCentro
+                            melhorAlvo = jogador
                         end
                     end
                 end
@@ -212,8 +190,8 @@ local function encontrarAlvoRapido()
     return melhorAlvo
 end
 
--- MIRAR RÁPIDO (MAIS VELOCIDADE PARA CELULAR)
-local function mirarRapido(alvo)
+-- MIRAR INSTANTÂNEO (VELOCIDADE MÁXIMA)
+local function mirarInstantaneo(alvo)
     if not alvo or not alvo.Character then return end
     
     local char = alvo.Character
@@ -231,29 +209,38 @@ local function mirarRapido(alvo)
     local centroX = Camera.ViewportSize.X / 2
     local centroY = Camera.ViewportSize.Y / 2
     
-    -- Calcula diferença
     local diffX = posTela.X - centroX
     local diffY = posTela.Y - centroY
     
-    -- Se estiver muito longe do centro, move o mouse
-    if math.abs(diffX) > 15 or math.abs(diffY) > 15 then
-        -- Aplica velocidade (quanto maior, mais rápido)
-        local moveX = diffX * AIM_CONFIG.VELOCIDADE
-        local moveY = diffY * AIM_CONFIG.VELOCIDADE
+    -- MODO INSTANTÂNEO - Move diretamente para o alvo
+    if AIM_CONFIG.INSTANTANEO then
+        -- Move o mouse DIRETO para a posição do alvo
+        local alvoX = centroX + diffX
+        local alvoY = centroY + diffY
         
-        -- Limitar movimento máximo por frame
-        moveX = math.clamp(moveX, -50, 50)
-        moveY = math.clamp(moveY, -50, 50)
+        alvoX = math.clamp(alvoX, 0, Camera.ViewportSize.X)
+        alvoY = math.clamp(alvoY, 0, Camera.ViewportSize.Y)
         
-        local posAtual = UserInputService:GetMouseLocation()
-        local novaX = math.clamp(posAtual.X + moveX, 0, Camera.ViewportSize.X)
-        local novaY = math.clamp(posAtual.Y + moveY, 0, Camera.ViewportSize.Y)
-        
-        UserInputService:SetMouseLocation(novaX, novaY)
+        UserInputService:SetMouseLocation(alvoX, alvoY)
+    else
+        -- Modo suave (mais lento)
+        if math.abs(diffX) > 5 or math.abs(diffY) > 5 then
+            local moveX = diffX * AIM_CONFIG.VELOCIDADE
+            local moveY = diffY * AIM_CONFIG.VELOCIDADE
+            
+            moveX = math.clamp(moveX, -100, 100)
+            moveY = math.clamp(moveY, -100, 100)
+            
+            local posAtual = UserInputService:GetMouseLocation()
+            local novaX = math.clamp(posAtual.X + moveX, 0, Camera.ViewportSize.X)
+            local novaY = math.clamp(posAtual.Y + moveY, 0, Camera.ViewportSize.Y)
+            
+            UserInputService:SetMouseLocation(novaX, novaY)
+        end
     end
 end
 
--- CRIAR MENU SIMPLES
+-- CRIAR MENU
 local function criarMenu()
     local gui = Instance.new("ScreenGui")
     gui.Name = "Menu"
@@ -261,7 +248,7 @@ local function criarMenu()
     gui.Parent = localPlayer.PlayerGui
     
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 180, 0, 100)
+    frame.Size = UDim2.new(0, 200, 0, 110)
     frame.Position = UDim2.new(0, 10, 0, 10)
     frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     frame.BackgroundTransparency = 0.4
@@ -271,20 +258,20 @@ local function criarMenu()
     
     -- Botão ESP
     local btnESP = Instance.new("TextButton")
-    btnESP.Size = UDim2.new(0, 160, 0, 35)
+    btnESP.Size = UDim2.new(0, 180, 0, 40)
     btnESP.Position = UDim2.new(0, 10, 0, 10)
     btnESP.Text = "⚡ ESP: LIGADO"
     btnESP.TextColor3 = VERDE
-    btnESP.TextSize = 16
+    btnESP.TextSize = 18
     btnESP.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     btnESP.BorderSizePixel = 1
     btnESP.Parent = frame
     
     -- Botão AIMBOT
     local btnAim = Instance.new("TextButton")
-    btnAim.Size = UDim2.new(0, 160, 0, 35)
-    btnAim.Position = UDim2.new(0, 10, 0, 55)
-    btnAim.Text = "🎯 AIMBOT: LIGADO"
+    btnAim.Size = UDim2.new(0, 180, 0, 40)
+    btnAim.Position = UDim2.new(0, 10, 0, 60)
+    btnAim.Text = "🎯 AIMBOT: LIGADO (INSTANTÂNEO)"
     btnAim.TextColor3 = VERDE
     btnAim.TextSize = 16
     btnAim.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -313,7 +300,7 @@ local function criarMenu()
     btnAim.MouseButton1Click:Connect(function()
         AIMBOT_LIGADO = not AIMBOT_LIGADO
         if AIMBOT_LIGADO then
-            btnAim.Text = "🎯 AIMBOT: LIGADO"
+            btnAim.Text = "🎯 AIMBOT: LIGADO (INSTANTÂNEO)"
             btnAim.TextColor3 = VERDE
         else
             btnAim.Text = "🎯 AIMBOT: DESLIGADO"
@@ -339,12 +326,12 @@ RunService.RenderStepped:Connect(function()
     -- ESP
     atualizarESP()
     
-    -- AIMBOT (MAIS RÁPIDO)
+    -- AIMBOT VELOCIDADE MÁXIMA
     if AIMBOT_LIGADO and ESP_LIGADO then
         local novoAlvo = encontrarAlvoRapido()
         if novoAlvo then
             alvoAtual = novoAlvo
-            mirarRapido(alvoAtual)
+            mirarInstantaneo(alvoAtual) -- MIRA INSTANTÂNEA
         else
             alvoAtual = nil
         end
@@ -354,6 +341,6 @@ end)
 -- INICIAR
 criarMenu()
 
-print("✅ ESP + AIMBOT RÁPIDO PARA CELULAR")
-print("🎮 Ajuste a VELOCIDADE no AIM_CONFIG.VELOCIDADE")
-print("📱 Valores: 0.3=lento, 0.7=rápido, 0.9=muito rápido")
+print("⚡ AIMBOT VELOCIDADE MÁXIMA ATIVADO!")
+print("🎯 Mira INSTANTÂNEA no inimigo")
+print("📱 Perfeito para CELULAR")
