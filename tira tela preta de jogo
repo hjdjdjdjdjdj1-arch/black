@@ -1,0 +1,40 @@
+-- Script para remover telas de loading no CELULAR
+
+local player = game.Players.LocalPlayer
+
+-- Remove todas as telas a cada 0.1 segundos
+task.spawn(function()
+    while true do
+        for _, gui in pairs(player.PlayerGui:GetChildren()) do
+            local nome = gui.Name:lower()
+            
+            -- Lista de telas para remover
+            if nome:find("loading") or 
+               nome:find("load") or 
+               nome:find("teleport") or 
+               nome:find("fade") or
+               nome:find("black") or
+               nome:find("transition") or
+               nome:find("travel") or
+               nome:find("portal") or
+               nome:find("spawn") then
+                
+                pcall(function() gui:Destroy() end)
+            end
+            
+            -- Remove telas pretas
+            if gui:IsA("Frame") and gui.BackgroundColor3 == Color3.new(0,0,0) then
+                pcall(function() gui:Destroy() end)
+            end
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- Remove telas novas assim que aparecem
+player.PlayerGui.ChildAdded:Connect(function(child)
+    task.wait(0.05)
+    pcall(function() child:Destroy() end)
+end)
+
+print("✅ Sistema de remoção de telas ativo no celular!")
