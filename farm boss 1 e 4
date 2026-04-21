@@ -1,0 +1,76 @@
+local player = game.Players.LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+
+-- TELEPORT WORLD
+local function teleportWorld(world,zone)
+
+local args = {
+    [1] = {
+        [1] = {
+            [1] = "Player",
+            [2] = "Teleport",
+            [3] = "Teleport",
+            [4] = world,
+            [5] = zone,
+            ["n"] = 5
+        },
+        [2] = "\2"
+    }
+}
+
+RS.BridgeNet.dataRemoteEvent:FireServer(unpack(args))
+
+end
+
+-- TP PLAYER
+local function tp(pos)
+local char = player.Character or player.CharacterAdded:Wait()
+char:PivotTo(CFrame.new(pos))
+end
+
+-- TP BOSS
+local function tpBoss(nome)
+
+for _, npc in pairs(workspace.Client.Enemies:GetChildren()) do
+if npc.Name == nome then
+
+local root = npc:FindFirstChild("HumanoidRootPart")
+
+if root then
+tp(root.Position + Vector3.new(0,5,0))
+end
+
+end
+end
+
+end
+
+-- POSIÇÕES
+local frutasPos = Vector3.new(6766,822,-1003)
+local dragonPos = Vector3.new(4341.0,795.0,4636.6)
+
+while true do
+
+-- FRUITS
+teleportWorld("Fruits Verse",1)
+task.wait(2)
+
+tp(frutasPos)
+task.wait(0.3)
+
+tpBoss("Kaidu")
+task.wait(0.7)
+
+-- DRAGON
+teleportWorld("Dragon Verse",2)
+task.wait(2)
+
+tp(dragonPos)
+task.wait(0.3)
+
+tpBoss("Shiny Black")
+
+-- DELAY FINAL 700ms
+task.wait(0.7)
+
+end
