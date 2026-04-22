@@ -1,12 +1,12 @@
--- ========== SCRIPT SIMPLIFICADO - SÓ FARM DE BOSS ==========
+-- ========== SCRIPT COM CONFIGURAÇÃO EM MS ==========
 local player = game.Players.LocalPlayer
 local RS = game:GetService("ReplicatedStorage")
 
 -- ========== CONFIGURAÇÕES PADRÃO (EM MS) ==========
 local config = {
-    tempoAposRemote = 500,      -- 500ms após remote
-    tempoAposCoord = 1000,      -- 1000ms = 1 segundo após coordenada
-    tempoFarm = 30000,          -- 30000ms = 30 segundos farmando
+    tempoAposRemote = 500,    -- 500ms (padrão)
+    tempoAposCoord = 1000,    -- 1000ms = 1 segundo (padrão)
+    tempoFarm = 30000,        -- 30000ms = 30 segundos (padrão)
     ativo = false,
     mapasSelecionados = {false, false, false, false}
 }
@@ -116,36 +116,21 @@ local function tp(pos)
     end
 end
 
--- ========== FUNÇÃO PARA ATACAR ==========
-local function atacar()
-    local VIM = game:GetService("VirtualInputManager")
-    VIM:SendKeyEvent(true, Enum.KeyCode.R, false, game)
-    task.wait(0.05)
-    VIM:SendKeyEvent(false, Enum.KeyCode.R, false, game)
-end
-
--- ========== FUNÇÃO DE FARM ==========
+-- ========== FUNÇÃO DE FARM (CONVERTENDO MS PARA SEGUNDOS) ==========
 local function farmarMapa(mapa)
     print("\n📍 Farmando: " .. mapa.nome)
     
-    -- 1. Teleportar para o mundo
     teleportWorld(mapa)
     print("  ⏳ Aguardando " .. config.tempoAposRemote .. "ms...")
-    task.wait(config.tempoAposRemote / 1000)
+    task.wait(config.tempoAposRemote / 1000) -- Converte ms para segundos
     
-    -- 2. Teleportar para coordenadas
     tp(mapa.pos)
     print("  📍 Teleportado para coordenadas")
     print("  ⏳ Aguardando " .. config.tempoAposCoord .. "ms...")
-    task.wait(config.tempoAposCoord / 1000)
+    task.wait(config.tempoAposCoord / 1000) -- Converte ms para segundos
     
-    -- 3. Atacar o boss
-    print("  ⚔️ Atacando boss por " .. (config.tempoFarm / 1000) .. " segundos...")
-    local inicio = tick()
-    while tick() - inicio < (config.tempoFarm / 1000) do
-        atacar()
-        task.wait(0.1)
-    end
+    print("  ⚔️ Farmando por " .. (config.tempoFarm / 1000) .. " segundos...")
+    task.wait(config.tempoFarm / 1000) -- Converte ms para segundos
     
     print("✅ Farm concluído em: " .. mapa.nome)
 end
@@ -153,7 +138,6 @@ end
 -- ========== LOOP PRINCIPAL ==========
 local function iniciarFarm()
     print("🚀 Iniciando farm nos mapas selecionados...")
-    
     while config.ativo do
         for i = 1, 4 do
             if config.mapasSelecionados[i] then
@@ -174,8 +158,8 @@ screenGui.ResetOnSpawn = false
 
 -- Frame principal
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 420, 0, 600)
-frame.Position = UDim2.new(0.5, -210, 0.5, -300)
+frame.Size = UDim2.new(0, 400, 0, 650)
+frame.Position = UDim2.new(0.5, -200, 0.5, -325)
 frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 frame.BackgroundTransparency = 0.1
 frame.BorderSizePixel = 2
@@ -187,10 +171,10 @@ frame.Parent = screenGui
 -- Título
 local titulo = Instance.new("TextLabel")
 titulo.Size = UDim2.new(1, 0, 0, 45)
-titulo.Text = "🤖 AUTO FARM BOSS"
+titulo.Text = "🤖 AUTO FARM - CONFIGURÁVEL (MS)"
 titulo.TextColor3 = Color3.fromRGB(0, 255, 255)
 titulo.BackgroundTransparency = 1
-titulo.TextSize = 16
+titulo.TextSize = 14
 titulo.Parent = frame
 
 -- Linha separadora
@@ -202,8 +186,8 @@ linha.Parent = frame
 
 -- ========== PAINEL DE CONFIGURAÇÃO ==========
 local configFrame = Instance.new("Frame")
-configFrame.Size = UDim2.new(0, 380, 0, 130)
-configFrame.Position = UDim2.new(0.5, -190, 0, 60)
+configFrame.Size = UDim2.new(0, 360, 0, 130)
+configFrame.Position = UDim2.new(0.5, -180, 0, 60)
 configFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 configFrame.BorderSizePixel = 1
 configFrame.BorderColor3 = Color3.fromRGB(100, 100, 100)
@@ -212,24 +196,24 @@ configFrame.Parent = frame
 -- Título do painel
 local configTitulo = Instance.new("TextLabel")
 configTitulo.Size = UDim2.new(1, 0, 0, 30)
-configTitulo.Text = "⚙️ CONFIGURAÇÕES (ms)"
+configTitulo.Text = "⚙️ CONFIGURAÇÕES DE VELOCIDADE (ms)"
 configTitulo.TextColor3 = Color3.fromRGB(255, 200, 0)
 configTitulo.BackgroundTransparency = 1
-configTitulo.TextSize = 12
+configTitulo.TextSize = 13
 configTitulo.Parent = configFrame
 
 -- Config Remote
 local remoteLabel = Instance.new("TextLabel")
-remoteLabel.Size = UDim2.new(0, 150, 0, 25)
+remoteLabel.Size = UDim2.new(0, 150, 0, 30)
 remoteLabel.Position = UDim2.new(0, 10, 0, 35)
 remoteLabel.Text = "Remote delay (ms):"
 remoteLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 remoteLabel.BackgroundTransparency = 1
-remoteLabel.TextSize = 11
+remoteLabel.TextSize = 12
 remoteLabel.Parent = configFrame
 
 local remoteBox = Instance.new("TextBox")
-remoteBox.Size = UDim2.new(0, 100, 0, 25)
+remoteBox.Size = UDim2.new(0, 100, 0, 30)
 remoteBox.Position = UDim2.new(0, 160, 0, 35)
 remoteBox.Text = tostring(config.tempoAposRemote)
 remoteBox.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
@@ -239,17 +223,17 @@ remoteBox.Parent = configFrame
 
 -- Config Coord
 local coordLabel = Instance.new("TextLabel")
-coordLabel.Size = UDim2.new(0, 150, 0, 25)
-coordLabel.Position = UDim2.new(0, 10, 0, 65)
+coordLabel.Size = UDim2.new(0, 150, 0, 30)
+coordLabel.Position = UDim2.new(0, 10, 0, 70)
 coordLabel.Text = "Coord delay (ms):"
 coordLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 coordLabel.BackgroundTransparency = 1
-coordLabel.TextSize = 11
+coordLabel.TextSize = 12
 coordLabel.Parent = configFrame
 
 local coordBox = Instance.new("TextBox")
-coordBox.Size = UDim2.new(0, 100, 0, 25)
-coordBox.Position = UDim2.new(0, 160, 0, 65)
+coordBox.Size = UDim2.new(0, 100, 0, 30)
+coordBox.Position = UDim2.new(0, 160, 0, 70)
 coordBox.Text = tostring(config.tempoAposCoord)
 coordBox.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 coordBox.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -258,17 +242,17 @@ coordBox.Parent = configFrame
 
 -- Config Farm
 local farmLabel = Instance.new("TextLabel")
-farmLabel.Size = UDim2.new(0, 150, 0, 25)
-farmLabel.Position = UDim2.new(0, 10, 0, 95)
+farmLabel.Size = UDim2.new(0, 150, 0, 30)
+farmLabel.Position = UDim2.new(0, 10, 0, 105)
 farmLabel.Text = "Farm time (ms):"
 farmLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 farmLabel.BackgroundTransparency = 1
-farmLabel.TextSize = 11
+farmLabel.TextSize = 12
 farmLabel.Parent = configFrame
 
 local farmBox = Instance.new("TextBox")
-farmBox.Size = UDim2.new(0, 100, 0, 25)
-farmBox.Position = UDim2.new(0, 160, 0, 95)
+farmBox.Size = UDim2.new(0, 100, 0, 30)
+farmBox.Position = UDim2.new(0, 160, 0, 105)
 farmBox.Text = tostring(config.tempoFarm)
 farmBox.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 farmBox.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -277,8 +261,8 @@ farmBox.Parent = configFrame
 
 -- Botão Salvar Config
 local salvarConfig = Instance.new("TextButton")
-salvarConfig.Size = UDim2.new(0, 80, 0, 40)
-salvarConfig.Position = UDim2.new(0, 280, 0, 45)
+salvarConfig.Size = UDim2.new(0, 80, 0, 35)
+salvarConfig.Position = UDim2.new(0, 270, 0, 85)
 salvarConfig.Text = "💾 SALVAR"
 salvarConfig.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
 salvarConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -287,8 +271,8 @@ salvarConfig.Parent = configFrame
 
 -- ========== SELEÇÃO DE MAPAS ==========
 local selecaoFrame = Instance.new("Frame")
-selecaoFrame.Size = UDim2.new(0, 380, 0, 250)
-selecaoFrame.Position = UDim2.new(0.5, -190, 0, 200)
+selecaoFrame.Size = UDim2.new(0, 360, 0, 250)
+selecaoFrame.Position = UDim2.new(0.5, -180, 0, 200)
 selecaoFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 selecaoFrame.BorderSizePixel = 1
 selecaoFrame.BorderColor3 = Color3.fromRGB(100, 100, 100)
@@ -308,8 +292,8 @@ local yPosMapa = 40
 
 for i = 1, 4 do
     local botao = Instance.new("TextButton")
-    botao.Size = UDim2.new(0, 340, 0, 35)
-    botao.Position = UDim2.new(0.5, -170, 0, yPosMapa)
+    botao.Size = UDim2.new(0, 320, 0, 35)
+    botao.Position = UDim2.new(0.5, -160, 0, yPosMapa)
     botao.Text = "⬜ " .. mapas[i].nome
     botao.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
     botao.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -322,7 +306,7 @@ end
 -- Botão Selecionar Todos
 local botaoTodos = Instance.new("TextButton")
 botaoTodos.Size = UDim2.new(0, 150, 0, 35)
-botaoTodos.Position = UDim2.new(0.5, -170, 0, yPosMapa)
+botaoTodos.Position = UDim2.new(0.5, -160, 0, yPosMapa)
 botaoTodos.Text = "⭐ SELECIONAR TODOS"
 botaoTodos.BackgroundColor3 = Color3.fromRGB(100, 50, 150)
 botaoTodos.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -332,7 +316,7 @@ botaoTodos.Parent = selecaoFrame
 -- Botão Limpar Seleção
 local botaoLimpar = Instance.new("TextButton")
 botaoLimpar.Size = UDim2.new(0, 150, 0, 35)
-botaoLimpar.Position = UDim2.new(0.5, 20, 0, yPosMapa)
+botaoLimpar.Position = UDim2.new(0.5, 10, 0, yPosMapa)
 botaoLimpar.Text = "🗑️ LIMPAR SELEÇÃO"
 botaoLimpar.BackgroundColor3 = Color3.fromRGB(150, 100, 0)
 botaoLimpar.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -342,8 +326,8 @@ yPosMapa = yPosMapa + 45
 
 -- ========== BOTÃO INICIAR ==========
 local botaoIniciar = Instance.new("TextButton")
-botaoIniciar.Size = UDim2.new(0, 380, 0, 50)
-botaoIniciar.Position = UDim2.new(0.5, -190, 0, 470)
+botaoIniciar.Size = UDim2.new(0, 360, 0, 50)
+botaoIniciar.Position = UDim2.new(0.5, -180, 0, 470)
 botaoIniciar.Text = "🔴 INICIAR FARM"
 botaoIniciar.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
 botaoIniciar.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -352,8 +336,8 @@ botaoIniciar.Parent = frame
 
 -- Status
 local statusTexto = Instance.new("TextLabel")
-statusTexto.Size = UDim2.new(0, 380, 0, 50)
-statusTexto.Position = UDim2.new(0.5, -190, 0, 530)
+statusTexto.Size = UDim2.new(0, 360, 0, 60)
+statusTexto.Position = UDim2.new(0.5, -180, 0, 530)
 statusTexto.Text = "Status: Parado\nNenhum mapa selecionado"
 statusTexto.TextColor3 = Color3.fromRGB(200, 200, 200)
 statusTexto.BackgroundTransparency = 1
@@ -389,11 +373,12 @@ local function salvarConfiguracoes()
         config.tempoFarm = novoFarm
     end
     
+    -- Atualiza os campos com os valores salvos
     remoteBox.Text = tostring(config.tempoAposRemote)
     coordBox.Text = tostring(config.tempoAposCoord)
     farmBox.Text = tostring(config.tempoFarm)
     
-    statusTexto.Text = "✅ Configurações salvas!\nRemote: " .. config.tempoAposRemote .. "ms | Farm: " .. (config.tempoFarm / 1000) .. "s"
+    statusTexto.Text = "✅ Configurações salvas!\nRemote: " .. config.tempoAposRemote .. "ms | Coord: " .. config.tempoAposCoord .. "ms | Farm: " .. (config.tempoFarm / 1000) .. "s"
     statusTexto.TextColor3 = Color3.fromRGB(0, 255, 0)
     task.wait(2)
     statusTexto.Text = "Status: Parado\nNenhum mapa selecionado"
@@ -481,7 +466,7 @@ botaoIniciar.MouseButton1Click:Connect(function()
                 table.insert(nomes, mapas[i].nome)
             end
         end
-        statusTexto.Text = "Status: FARMANDO\nMapas: " .. table.concat(nomes, ", ")
+        statusTexto.Text = "Status: FARMANDO\nMapas: " .. table.concat(nomes, ", ") .. "\n⏱️ Remote:" .. config.tempoAposRemote .. "ms | Coord:" .. config.tempoAposCoord .. "ms | Farm:" .. (config.tempoFarm / 1000) .. "s"
         statusTexto.TextColor3 = Color3.fromRGB(0, 255, 0)
         
         task.spawn(iniciarFarm)
@@ -504,5 +489,5 @@ botaoFechar.MouseButton1Click:Connect(function()
 end)
 
 atualizarUI()
-print("✅ UI carregada - Só Farm de Boss!")
-print("🚀 Selecione os mapas e clique em INICIAR FARM")
+print("✅ UI carregada! Agora todos os delays são em MILISSEGUNDOS (ms)!")
+print("💡 1000ms = 1 segundo")
