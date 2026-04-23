@@ -102,13 +102,132 @@ task.spawn(function()
 end)
 -- =================================================
 
+-- ========== AVISO GRANDE PAUSA POR ANÚNCIO ==========
+local ANNOUNCEMENT_TEXT = "trial easy gamemode has started"
+local ANNOUNCEMENT_PAUSE_SEC = 120 -- 2 minutos
+local pausedByAnnouncement = false
+local pauseEndsAt = 0
+
+local avisoPausaGui = Instance.new("ScreenGui")
+avisoPausaGui.Name = "PauseAnnouncementGUI"
+avisoPausaGui.IgnoreGuiInset = true
+avisoPausaGui.ResetOnSpawn = false
+avisoPausaGui.Parent = player.PlayerGui
+
+local avisoFrame = Instance.new("Frame")
+avisoFrame.BackgroundColor3 = Color3.fromRGB(255, 180, 0)
+avisoFrame.BackgroundTransparency = 0.15
+avisoFrame.Size = UDim2.new(0.7, 0, 0.14, 0)
+avisoFrame.Position = UDim2.new(0.15, 0, 0.42, 0)
+avisoFrame.BorderSizePixel = 3
+avisoFrame.BorderColor3 = Color3.fromRGB(255, 50, 50)
+avisoFrame.Visible = false
+avisoFrame.ZIndex = 1000
+avisoFrame.Parent = avisoPausaGui
+
+local avisoText = Instance.new("TextLabel")
+avisoText.Size = UDim2.new(1,0,1,0)
+avisoText.BackgroundTransparency = 1
+avisoText.TextColor3 = Color3.fromRGB(255, 20, 20)
+avisoText.TextStrokeTransparency = 0.5
+avisoText.Font = Enum.Font.SourceSansBold
+avisoText.TextScaled = true
+avisoText.TextWrapped = true
+avisoText.Text = ""
+avisoText.ZIndex = 1010
+avisoText.Parent = avisoFrame
+
+local function checkForAnnouncement()
+    for _, gui in ipairs(player.PlayerGui:GetDescendants()) do
+        if gui:IsA("TextLabel") or gui:IsA("TextButton") then
+            local texto = tostring(gui.Text or ""):lower()
+            if texto:find(ANNOUNCEMENT_TEXT) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local function interruptibleWait(sec)
+    local elapsed = 0
+    while elapsed < sec do
+        if not config.ativo then return false end
+        if pausedByAnnouncement then
+            while pausedByAnnouncement do
+                task.wait(0.2)
+                if not config.ativo then return false end
+            end
+        end
+        local s = math.min(sec - elapsed, 0.2)
+        task.wait(s)
+        elapsed = elapsed + s
+    end
+    return true
+end
+
+local farmarMapa_original = function(mapa)
+    print("\n📍 Farmando: " .. mapa.nome)
+    teleportWorld(mapa)
+    print("  ⏳ Aguardando " .. config.tempoAposRemote .. "ms...")
+    task.wait(config.tempoAposRemote / 1000)
+    tp(mapa.pos)
+    print("  📍 Teleportado para coordenadas")
+    print("  ⏳ Aguardando " .. config.tempoAposCoord .. "ms...")
+    task.wait(config.tempoAposCoord / 1000)
+    print("  ⚔️ Farmando por " .. (config.tempoFarm / 1000) .. " segundos...")
+    task.wait(config.tempoFarm / 1000)
+    print("✅ Farm concluído em: " .. mapa.nome)
+end
+
+-- Substitui farmarMapa por um que respeita o aviso de pausa
+farmarMapa = function(mapa)
+    print("\n📍 Farmando: " .. mapa.nome)
+    teleportWorld(mapa)
+    if not interruptibleWait(config.tempoAposRemote / 1000) then return end
+    tp(mapa.pos)
+    if not interruptibleWait(config.tempoAposCoord / 1000) then return end
+    if not interruptibleWait(config.tempoFarm / 1000) then return end
+    print("✅ Farm concluído em: " .. mapa.nome)
+end
+
+task.spawn(function()
+    while true do
+        if not pausedByAnnouncement and checkForAnnouncement() and config.ativo then
+            pausedByAnnouncement = true
+            pauseEndsAt = tick() + ANNOUNCEMENT_PAUSE_SEC
+            avisoFrame.Visible = true
+            print("🔔 PAUSA por anúncio iniciada: "..ANNOUNCEMENT_PAUSE_SEC.."s")
+        end
+        if pausedByAnnouncement then
+            local restante = math.max(0, pauseEndsAt - tick())
+            avisoText.Text = "⚠️ Farm PAUSADO: Trial Easy começou!\nRetomando em "..math.ceil(restante).." segundos..."
+            if statusTexto then
+                statusTexto.Text = "⚠️ Pausado por anúncio!\nRetomando em "..math.ceil(restante).."s..."
+                statusTexto.TextColor3 = Color3.fromRGB(255,150,0)
+            end
+            if restante <= 0 then
+                pausedByAnnouncement = false
+                avisoFrame.Visible = false
+                print("▶️ Pausa do anúncio terminou. Farm retomado.")
+                if statusTexto and config.ativo then
+                    statusTexto.Text = "Status: FARMANDO\n(automatizado após pausa de anúncio)"
+                    statusTexto.TextColor3 = Color3.fromRGB(0,255,0)
+                end
+            end
+        end
+        task.wait(0.3)
+    end
+end)
+-- =================================================
+
 -- ========== FUNÇÕES ==========
-local function teleportWorld(mapa)
+function teleportWorld(mapa)
     RS.BridgeNet.dataRemoteEvent:FireServer(unpack(mapa.remote))
     print("🌍 Teleportando para: " .. mapa.nome)
 end
 
-local function tp(pos)
+function tp(pos)
     local char = player.Character or player.CharacterAdded:Wait()
     local root = char:FindFirstChild("HumanoidRootPart")
     if root then
@@ -116,27 +235,8 @@ local function tp(pos)
     end
 end
 
--- ========== FUNÇÃO DE FARM (CONVERTENDO MS PARA SEGUNDOS) ==========
-local function farmarMapa(mapa)
-    print("\n📍 Farmando: " .. mapa.nome)
-    
-    teleportWorld(mapa)
-    print("  ⏳ Aguardando " .. config.tempoAposRemote .. "ms...")
-    task.wait(config.tempoAposRemote / 1000) -- Converte ms para segundos
-    
-    tp(mapa.pos)
-    print("  📍 Teleportado para coordenadas")
-    print("  ⏳ Aguardando " .. config.tempoAposCoord .. "ms...")
-    task.wait(config.tempoAposCoord / 1000) -- Converte ms para segundos
-    
-    print("  ⚔️ Farmando por " .. (config.tempoFarm / 1000) .. " segundos...")
-    task.wait(config.tempoFarm / 1000) -- Converte ms para segundos
-    
-    print("✅ Farm concluído em: " .. mapa.nome)
-end
-
 -- ========== LOOP PRINCIPAL ==========
-local function iniciarFarm()
+function iniciarFarm()
     print("🚀 Iniciando farm nos mapas selecionados...")
     while config.ativo do
         for i = 1, 4 do
@@ -156,7 +256,6 @@ screenGui.Parent = player.PlayerGui
 screenGui.Name = "AutoFarmGUI"
 screenGui.ResetOnSpawn = false
 
--- Frame principal
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 400, 0, 650)
 frame.Position = UDim2.new(0.5, -200, 0.5, -325)
@@ -168,7 +267,6 @@ frame.Active = true
 frame.Draggable = true
 frame.Parent = screenGui
 
--- Título
 local titulo = Instance.new("TextLabel")
 titulo.Size = UDim2.new(1, 0, 0, 45)
 titulo.Text = "🤖 AUTO FARM - CONFIGURÁVEL (MS)"
@@ -177,14 +275,12 @@ titulo.BackgroundTransparency = 1
 titulo.TextSize = 14
 titulo.Parent = frame
 
--- Linha separadora
 local linha = Instance.new("Frame")
 linha.Size = UDim2.new(0.9, 0, 0, 2)
 linha.Position = UDim2.new(0.05, 0, 0, 50)
 linha.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
 linha.Parent = frame
 
--- ========== PAINEL DE CONFIGURAÇÃO ==========
 local configFrame = Instance.new("Frame")
 configFrame.Size = UDim2.new(0, 360, 0, 130)
 configFrame.Position = UDim2.new(0.5, -180, 0, 60)
@@ -193,7 +289,6 @@ configFrame.BorderSizePixel = 1
 configFrame.BorderColor3 = Color3.fromRGB(100, 100, 100)
 configFrame.Parent = frame
 
--- Título do painel
 local configTitulo = Instance.new("TextLabel")
 configTitulo.Size = UDim2.new(1, 0, 0, 30)
 configTitulo.Text = "⚙️ CONFIGURAÇÕES DE VELOCIDADE (ms)"
@@ -202,7 +297,6 @@ configTitulo.BackgroundTransparency = 1
 configTitulo.TextSize = 13
 configTitulo.Parent = configFrame
 
--- Config Remote
 local remoteLabel = Instance.new("TextLabel")
 remoteLabel.Size = UDim2.new(0, 150, 0, 30)
 remoteLabel.Position = UDim2.new(0, 10, 0, 35)
@@ -221,7 +315,6 @@ remoteBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 remoteBox.TextSize = 12
 remoteBox.Parent = configFrame
 
--- Config Coord
 local coordLabel = Instance.new("TextLabel")
 coordLabel.Size = UDim2.new(0, 150, 0, 30)
 coordLabel.Position = UDim2.new(0, 10, 0, 70)
@@ -240,7 +333,6 @@ coordBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 coordBox.TextSize = 12
 coordBox.Parent = configFrame
 
--- Config Farm
 local farmLabel = Instance.new("TextLabel")
 farmLabel.Size = UDim2.new(0, 150, 0, 30)
 farmLabel.Position = UDim2.new(0, 10, 0, 105)
@@ -259,7 +351,6 @@ farmBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 farmBox.TextSize = 12
 farmBox.Parent = configFrame
 
--- Botão Salvar Config
 local salvarConfig = Instance.new("TextButton")
 salvarConfig.Size = UDim2.new(0, 80, 0, 35)
 salvarConfig.Position = UDim2.new(0, 270, 0, 85)
@@ -269,7 +360,6 @@ salvarConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
 salvarConfig.TextSize = 11
 salvarConfig.Parent = configFrame
 
--- ========== SELEÇÃO DE MAPAS ==========
 local selecaoFrame = Instance.new("Frame")
 selecaoFrame.Size = UDim2.new(0, 360, 0, 250)
 selecaoFrame.Position = UDim2.new(0.5, -180, 0, 200)
@@ -286,7 +376,6 @@ selecaoTitulo.BackgroundTransparency = 1
 selecaoTitulo.TextSize = 13
 selecaoTitulo.Parent = selecaoFrame
 
--- Botões dos mapas
 local botoes = {}
 local yPosMapa = 40
 
@@ -303,7 +392,6 @@ for i = 1, 4 do
     yPosMapa = yPosMapa + 42
 end
 
--- Botão Selecionar Todos
 local botaoTodos = Instance.new("TextButton")
 botaoTodos.Size = UDim2.new(0, 150, 0, 35)
 botaoTodos.Position = UDim2.new(0.5, -160, 0, yPosMapa)
@@ -313,7 +401,6 @@ botaoTodos.TextColor3 = Color3.fromRGB(255, 255, 255)
 botaoTodos.TextSize = 11
 botaoTodos.Parent = selecaoFrame
 
--- Botão Limpar Seleção
 local botaoLimpar = Instance.new("TextButton")
 botaoLimpar.Size = UDim2.new(0, 150, 0, 35)
 botaoLimpar.Position = UDim2.new(0.5, 10, 0, yPosMapa)
@@ -324,7 +411,6 @@ botaoLimpar.TextSize = 11
 botaoLimpar.Parent = selecaoFrame
 yPosMapa = yPosMapa + 45
 
--- ========== BOTÃO INICIAR ==========
 local botaoIniciar = Instance.new("TextButton")
 botaoIniciar.Size = UDim2.new(0, 360, 0, 50)
 botaoIniciar.Position = UDim2.new(0.5, -180, 0, 470)
@@ -334,7 +420,6 @@ botaoIniciar.TextColor3 = Color3.fromRGB(255, 255, 255)
 botaoIniciar.TextSize = 16
 botaoIniciar.Parent = frame
 
--- Status
 local statusTexto = Instance.new("TextLabel")
 statusTexto.Size = UDim2.new(0, 360, 0, 60)
 statusTexto.Position = UDim2.new(0.5, -180, 0, 530)
@@ -345,7 +430,6 @@ statusTexto.TextSize = 11
 statusTexto.TextWrapped = true
 statusTexto.Parent = frame
 
--- Botão Fechar
 local botaoFechar = Instance.new("TextButton")
 botaoFechar.Size = UDim2.new(0, 60, 0, 30)
 botaoFechar.Position = UDim2.new(1, -70, 0, 8)
@@ -355,29 +439,22 @@ botaoFechar.TextColor3 = Color3.fromRGB(255, 255, 255)
 botaoFechar.TextSize = 14
 botaoFechar.Parent = frame
 
--- ========== FUNÇÕES DA UI ==========
 local function salvarConfiguracoes()
     local novoRemote = tonumber(remoteBox.Text)
     local novoCoord = tonumber(coordBox.Text)
     local novoFarm = tonumber(farmBox.Text)
-    
     if novoRemote and novoRemote > 0 then
         config.tempoAposRemote = novoRemote
     end
-    
     if novoCoord and novoCoord > 0 then
         config.tempoAposCoord = novoCoord
     end
-    
     if novoFarm and novoFarm > 0 then
         config.tempoFarm = novoFarm
     end
-    
-    -- Atualiza os campos com os valores salvos
     remoteBox.Text = tostring(config.tempoAposRemote)
     coordBox.Text = tostring(config.tempoAposCoord)
     farmBox.Text = tostring(config.tempoFarm)
-    
     statusTexto.Text = "✅ Configurações salvas!\nRemote: " .. config.tempoAposRemote .. "ms | Coord: " .. config.tempoAposCoord .. "ms | Farm: " .. (config.tempoFarm / 1000) .. "s"
     statusTexto.TextColor3 = Color3.fromRGB(0, 255, 0)
     task.wait(2)
@@ -408,10 +485,8 @@ local function atualizarUI()
     end
 end
 
--- Salvar configuração
 salvarConfig.MouseButton1Click:Connect(salvarConfiguracoes)
 
--- Selecionar mapa individual
 for i = 1, 4 do
     botoes[i].MouseButton1Click:Connect(function()
         config.mapasSelecionados[i] = not config.mapasSelecionados[i]
@@ -419,7 +494,6 @@ for i = 1, 4 do
     end)
 end
 
--- Selecionar todos
 botaoTodos.MouseButton1Click:Connect(function()
     for i = 1, 4 do
         config.mapasSelecionados[i] = true
@@ -427,7 +501,6 @@ botaoTodos.MouseButton1Click:Connect(function()
     atualizarUI()
 end)
 
--- Limpar seleção
 botaoLimpar.MouseButton1Click:Connect(function()
     for i = 1, 4 do
         config.mapasSelecionados[i] = false
@@ -435,7 +508,6 @@ botaoLimpar.MouseButton1Click:Connect(function()
     atualizarUI()
 end)
 
--- Iniciar/Parar
 botaoIniciar.MouseButton1Click:Connect(function()
     local temSelecionado = false
     for i = 1, 4 do
@@ -483,7 +555,6 @@ botaoIniciar.MouseButton1Click:Connect(function()
     end
 end)
 
--- Fechar UI
 botaoFechar.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
