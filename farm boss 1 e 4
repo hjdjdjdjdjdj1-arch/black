@@ -104,7 +104,7 @@ end)
 
 -- ========== AVISO GRANDE PAUSA POR ANÚNCIO ==========
 local ANNOUNCEMENT_TEXT = "trial easy gamemode has started"
-local ANNOUNCEMENT_PAUSE_SEC = 120 -- 2 minutos
+local ANNOUNCEMENT_PAUSE_SEC = 112 -- 2 minutos
 local pausedByAnnouncement = false
 local pauseEndsAt = 0
 
