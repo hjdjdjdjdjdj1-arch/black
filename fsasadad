@@ -1,0 +1,148 @@
+-[[
+    AUTO REDEEM - CAMPO EXATO DA SHOP
+    Procura especificamente dentro de Shop
+]]
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- ============================================
+-- CÓDIGOS
+-- ============================================
+local Codes = {
+    "BANNERFIXED",
+    "SHUTDOWN",
+    "4KCCU",
+    "5KCCU",
+    "6KCCU",
+    "7KCCU",
+    "PATCHUPDATE",
+    "UPDATE05",
+    "ACCESSORIES",
+    "CRAFTFIXED"
+}
+
+-- ============================================
+-- ENCONTRA O CAMPO DENTRO DA SHOP
+-- ============================================
+
+local function FindCodeField()
+    -- Procura a GUI Main
+    local mainGUI = nil
+    for _, gui in pairs(player.PlayerGui:GetChildren()) do
+        if gui:IsA("ScreenGui") and gui.Name == "Main" then
+            mainGUI = gui
+            break
+        end
+    end
+    
+    if not mainGUI then
+        print("❌ GUI Main não encontrada!")
+        return nil
+    end
+    
+    -- Vai direto para Shop
+    local container = mainGUI:FindFirstChild("Container")
+    if not container then return nil end
+    
+    local shop = container:FindFirstChild("Shop")
+    if not shop then 
+        print("❌ Shop não encontrado! A loja está aberta?")
+        return nil 
+    end
+    
+    -- Procura por TextBox dentro de Shop
+    for _, child in pairs(shop:GetDescendants()) do
+        if child:IsA("TextBox") then
+            print("✅ Campo encontrado: " .. child.Name)
+            print("   Caminho: " .. child:GetFullName())
+            return child
+        end
+    end
+    
+    print("❌ Nenhum campo de texto dentro de Shop!")
+    return nil
+end
+
+-- ============================================
+-- RESGATAR CÓDIGO
+-- ============================================
+
+local function RedeemCode(code, textBox)
+    if not textBox then return false end
+    
+    -- Foca no campo
+    pcall(function()
+        textBox:CaptureFocus()
+    end)
+    task.wait(0.1)
+    
+    -- Limpa e insere o código
+    textBox.Text = ""
+    textBox.Text = code
+    task.wait(0.2)
+    
+    -- Aperta ENTER (ou solta foco)
+    textBox:ReleaseFocus()
+    
+    print("✅ " .. code)
+    return true
+end
+
+-- ============================================
+-- RESGATAR TODOS
+-- ============================================
+
+local function RedeemAll()
+    print("\n==========================================")
+    print("   🎁 RESGATANDO CÓDIGOS")
+    print("==========================================\n")
+    
+    local textBox = FindCodeField()
+    
+    if not textBox then
+        print("❌ Campo de código não encontrado!")
+        print("💡 Certifique-se que a loja está ABERTA")
+        print("💡 E que você está na ABA DE CÓDIGOS")
+        return
+    end
+    
+    print("📌 Campo: " .. textBox:GetFullName())
+    print("📌 Resgatando " .. #Codes .. " códigos...\n")
+    
+    for i, code in ipairs(Codes) do
+        print(string.format("[%d/%d] %s", i, #Codes, code))
+        RedeemCode(code, textBox)
+        task.wait(1.5)
+    end
+    
+    print("\n==========================================")
+    print("   ✅ " .. #Codes .. " CÓDIGOS PROCESSADOS!")
+    print("==========================================")
+end
+
+-- ============================================
+-- LOOP INFINITO A CADA 4s
+-- ============================================
+
+print("==========================================")
+print("   🎁 AUTO REDEEM CODES (LOOP INFINITO)")
+print("==========================================")
+print("")
+print("📌 ABRA A LOJA e deixe na ABA DE CÓDIGOS")
+print("📌 Iniciando em 2 segundos...")
+print("==========================================\n")
+
+task.wait(2)
+
+local loopCount = 0
+while true do
+    loopCount = loopCount + 1
+    print(string.format("\n--- Loop #%d - iniciando RedeemAll() ---", loopCount))
+    local ok, err = pcall(RedeemAll)
+    if not ok then
+        warn("Erro ao executar RedeemAll():", err)
+    end
+    print(string.format("--- Loop #%d - finalizado. Aguardando 4 segundos ---\n", loopCount))
+    task.wait(4)
+end
