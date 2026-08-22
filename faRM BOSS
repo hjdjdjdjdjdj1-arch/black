@@ -1,107 +1,200 @@
--- ========== SCRIPT COMPLETO - VELOCIDADE 500ms ==========
-local player = game.Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
+--[[
+    AUTO SCRIPT - COMPLETO COM LOOP 4s
+    Daily Diamonds, Codes, Gift, Select
+    Loop infinito a cada 4 segundos
+]]
 
--- ========== REMOVER TELAS DE LOADING (MELHORADO) ==========
-task.spawn(function()
-    while true do
-        for _, gui in pairs(player.PlayerGui:GetChildren()) do
-            local nome = gui.Name:lower()
-            
-            -- Lista completa de telas para remover
-            if nome:find("loading") or 
-               nome:find("load") or 
-               nome:find("teleport") or 
-               nome:find("fade") or
-               nome:find("black") or
-               nome:find("transition") or
-               nome:find("travel") or
-               nome:find("portal") or
-               nome:find("spawn") or
-               nome:find("internet") or 
-               nome:find("conex") then
-                
-                pcall(function() gui:Destroy() end)
-            end
-            
-            -- Remove telas pretas
-            if gui:IsA("Frame") and gui.BackgroundColor3 == Color3.new(0,0,0) then
-                pcall(function() gui:Destroy() end)
-            end
-        end
-        task.wait(0.1)
-    end
-end)
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
--- Remove telas novas assim que aparecem
-player.PlayerGui.ChildAdded:Connect(function(child)
-    task.wait(0.05)
-    pcall(function() child:Destroy() end)
-end)
--- =================================================
+-- ============================================
+-- CONFIGURAÇÕES
+-- ============================================
 
--- ========== CONFIGURAÇÃO DOS MAPAS ==========
-local mapas = {
-    {
-        nome = "Dragon Verse",
-        remote = {
-            [1] = {
-                [1] = {
-                    [1] = "Player",
-                    [2] = "Teleport",
-                    [3] = "Teleport",
-                    [4] = "Dragon Verse",
-                    [5] = 2,
-                    ["n"] = 5
-                },
-                [2] = "\2"
-            }
-        },
-        pos = Vector3.new(4341.9, 795.6, 4633.2)
+local CONFIG = {
+    -- Daily Diamonds
+    DailyDiamonds = true,
+    
+    -- Codes
+    Codes = {
+        "UPDATE05",
+        "UPDATE1",
+        -- Adicione mais códigos aqui
     },
-    {
-        nome = "Slime Verse",
-        remote = {
-            [1] = {
-                [1] = {
-                    [1] = "Player",
-                    [2] = "Teleport",
-                    [3] = "Teleport",
-                    [4] = "Slime Verse",
-                    [5] = 1,
-                    ["n"] = 5
-                },
-                [2] = "\2"
-            }
-        },
-        pos = Vector3.new(693.2, 741.8, -409.7)
+    
+    -- Gift
+    Gift = {
+        Enabled = true,
+        TargetId = 11218019511,
+        TargetName = "GS_BLACKO",
+        Product = "PotionPower"
+    },
+    
+    -- Select
+    Select = {
+        Enabled = true,
+        Character = "Hawk"
     }
 }
--- =============================================
 
-local function tp(pos)
-    char = player.Character or player.CharacterAdded:Wait()
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if root then
-        root.CFrame = CFrame.new(pos)
+-- ============================================
+-- FUNÇÃO PARA ENVIAR REMOTE
+-- ============================================
+
+local function FireRemote(path, params)
+    local success, result = pcall(function()
+        local remote = game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Packages"):WaitForChild("Events"):WaitForChild("RemoteEvent")
+        
+        local args = {
+            [1] = {
+                [1] = {
+                    ["Params"] = params,
+                    ["Path"] = path
+                }
+            }
+        }
+        
+        remote:FireServer(unpack(args))
+        return true
+    end)
+    
+    if success then
+        print("✅ " .. path)
+    else
+        print("❌ " .. path .. " - " .. tostring(result))
     end
+    
+    return success
 end
 
--- ========== LOOP COM 500ms ==========
-print("🚀 SISTEMA AUTO TP INICIADO!")
-print("⏱️ Velocidade: 500ms entre ações")
-print("✅ Remoção de telas de loading ativa")
+-- ============================================
+-- FUNÇÃO: SELECT
+-- ============================================
 
-while true do
-    for _, mapa in ipairs(mapas) do
-        -- Remote (teleporte de mundo)
-        if mapa.remote then
-            game:GetService("ReplicatedStorage").BridgeNet.dataRemoteEvent:FireServer(unpack(mapa.remote))
-            task.wait(0.5) -- 500ms
-        end
-        
-        -- Teleporte para coordenadas
-        tp(mapa.pos)
-        task.wait(0.5) -- 500ms
+local function SelectHawk()
+    return FireRemote("starter/select", {"Hawk"})
+end
+
+-- ============================================
+-- FUNÇÃO: START DAILY DIAMONDS
+-- ============================================
+
+local function StartDailyDiamonds()
+    return FireRemote("missions/start", {"DailyDiamonds", "1"})
+end
+
+-- ============================================
+-- FUNÇÃO: CLAIM DAILY DIAMONDS (NOVA)
+-- ============================================
+
+local function ClaimDailyDiamonds()
+    return FireRemote("missions/claim", {"DailyDiamonds", 1})
+end
+
+-- ============================================
+-- FUNÇÃO: CLAIM DAILY REWARD
+-- ============================================
+
+local function ClaimDailyReward()
+    return FireRemote("DailyRewards/Claim", {1})
+end
+
+-- ============================================
+-- FUNÇÃO: REDEEM CODE
+-- ============================================
+
+local function RedeemCode(code)
+    return FireRemote("codes/redeem", {code})
+end
+
+-- ============================================
+-- FUNÇÃO: SET GIFT TARGET
+-- ============================================
+
+local function SetGiftTarget(targetId)
+    return FireRemote("shop/setGiftTarget", {targetId})
+end
+
+-- ============================================
+-- FUNÇÃO: SEND GIFT
+-- ============================================
+
+local function SendGift(targetId, product)
+    return FireRemote("shop/diamondGift", {targetId, "Products", product})
+end
+
+-- ============================================
+-- FUNÇÃO: EXECUTAR TUDO
+-- ============================================
+
+local function ExecuteAll()
+    print("\n==========================================")
+    print("   🚀 EXECUTANDO FUNÇÕES")
+    print("==========================================\n")
+    
+    -- 1. Select
+    if CONFIG.Select.Enabled then
+        print("📌 Select Hawk...")
+        SelectHawk()
+        task.wait(0.5)
     end
+    
+    -- 2. Daily Diamonds
+    if CONFIG.DailyDiamonds then
+        print("📌 Daily Diamonds...")
+        StartDailyDiamonds()
+        task.wait(0.5)
+        ClaimDailyDiamonds()  -- NOVA FUNÇÃO
+        task.wait(0.5)
+        ClaimDailyReward()
+        task.wait(0.5)
+    end
+    
+    -- 3. Codes
+    if #CONFIG.Codes > 0 then
+        print("📌 Códigos...")
+        for i, code in ipairs(CONFIG.Codes) do
+            print(string.format("   [%d/%d] %s", i, #CONFIG.Codes, code))
+            RedeemCode(code)
+            task.wait(0.5)
+        end
+    end
+    
+    -- 4. Gift
+    if CONFIG.Gift.Enabled then
+        print("📌 Gift...")
+        SetGiftTarget(CONFIG.Gift.TargetId)
+        task.wait(0.5)
+        SendGift(CONFIG.Gift.TargetId, CONFIG.Gift.Product)
+        task.wait(0.5)
+    end
+    
+    print("\n✅ CICLO CONCLUÍDO!")
+end
+
+-- ============================================
+-- LOOP PRINCIPAL (4 SEGUNDOS)
+-- ============================================
+
+print("==========================================")
+print("   🚀 AUTO SCRIPT - LOOP 4s")
+print("==========================================")
+print("")
+print("📌 Funções:")
+print("   ✅ Select Hawk")
+print("   ✅ Daily Diamonds (Start + Claim)")
+print("   ✅ Codes")
+print("   ✅ Gift")
+print("")
+print("🔄 Loop a cada 4 segundos")
+print("==========================================\n")
+
+-- Executa imediatamente
+ExecuteAll()
+
+-- Loop infinito a cada 4 segundos
+while true do
+    print("\n⏳ Aguardando 4 segundos...")
+    task.wait(4)
+    ExecuteAll()
 end
