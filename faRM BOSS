@@ -1,6 +1,6 @@
 --[[
     AUTO SCRIPT - COMPLETO COM LOOP 4s
-    Daily Diamonds, Codes, Gift, Select
+    Daily Diamonds, Codes, Gift, Select, Dungeon
     Loop infinito a cada 4 segundos
 ]]
 
@@ -15,10 +15,9 @@ local CONFIG = {
     -- Daily Diamonds
     DailyDiamonds = true,
     
-    -- Codes (APENAS UPDATE1)
+    -- Codes
     Codes = {
         "UPDATE1",
-        -- Adicione mais códigos aqui
     },
     
     -- Gift
@@ -33,6 +32,12 @@ local CONFIG = {
     Select = {
         Enabled = true,
         Character = "Hawk"
+    },
+    
+    -- Dungeon
+    Dungeon = {
+        Enabled = true,
+        Mode = "Dungeon:2"  -- "Dungeon:1" ou "Dungeon:2"
     }
 }
 
@@ -123,6 +128,14 @@ local function SendGift(targetId, product)
 end
 
 -- ============================================
+-- FUNÇÃO: JOIN DUNGEON (NOVA)
+-- ============================================
+
+local function JoinDungeon(dungeonMode)
+    return FireRemote("gamemodes/join", {dungeonMode})
+end
+
+-- ============================================
 -- FUNÇÃO: EXECUTAR TUDO
 -- ============================================
 
@@ -149,7 +162,7 @@ local function ExecuteAll()
         task.wait(0.5)
     end
     
-    -- 3. Codes (APENAS UPDATE1)
+    -- 3. Codes
     if #CONFIG.Codes > 0 then
         print("📌 Códigos...")
         for i, code in ipairs(CONFIG.Codes) do
@@ -165,6 +178,13 @@ local function ExecuteAll()
         SetGiftTarget(CONFIG.Gift.TargetId)
         task.wait(0.5)
         SendGift(CONFIG.Gift.TargetId, CONFIG.Gift.Product)
+        task.wait(0.5)
+    end
+    
+    -- 5. Dungeon (NOVA)
+    if CONFIG.Dungeon.Enabled then
+        print("📌 Entrando na Dungeon: " .. CONFIG.Dungeon.Mode)
+        JoinDungeon(CONFIG.Dungeon.Mode)
         task.wait(0.5)
     end
     
@@ -184,6 +204,7 @@ print("   ✅ Select Hawk")
 print("   ✅ Daily Diamonds (Start + Claim)")
 print("   ✅ Codes: UPDATE1")
 print("   ✅ Gift")
+print("   ✅ Dungeon: " .. CONFIG.Dungeon.Mode)
 print("")
 print("🔄 Loop a cada 4 segundos")
 print("==========================================\n")
