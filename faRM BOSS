@@ -15,9 +15,8 @@ local CONFIG = {
     -- Daily Diamonds
     DailyDiamonds = true,
     
-    -- Codes
+    -- Codes (APENAS UPDATE1)
     Codes = {
-        "UPDATE05",
         "UPDATE1",
         -- Adicione mais códigos aqui
     },
@@ -84,7 +83,7 @@ local function StartDailyDiamonds()
 end
 
 -- ============================================
--- FUNÇÃO: CLAIM DAILY DIAMONDS (NOVA)
+-- FUNÇÃO: CLAIM DAILY DIAMONDS
 -- ============================================
 
 local function ClaimDailyDiamonds()
@@ -144,13 +143,13 @@ local function ExecuteAll()
         print("📌 Daily Diamonds...")
         StartDailyDiamonds()
         task.wait(0.5)
-        ClaimDailyDiamonds()  -- NOVA FUNÇÃO
+        ClaimDailyDiamonds()
         task.wait(0.5)
         ClaimDailyReward()
         task.wait(0.5)
     end
     
-    -- 3. Codes
+    -- 3. Codes (APENAS UPDATE1)
     if #CONFIG.Codes > 0 then
         print("📌 Códigos...")
         for i, code in ipairs(CONFIG.Codes) do
@@ -183,7 +182,7 @@ print("")
 print("📌 Funções:")
 print("   ✅ Select Hawk")
 print("   ✅ Daily Diamonds (Start + Claim)")
-print("   ✅ Codes")
+print("   ✅ Codes: UPDATE1")
 print("   ✅ Gift")
 print("")
 print("🔄 Loop a cada 4 segundos")
