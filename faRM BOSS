@@ -1,6 +1,6 @@
 --[[
     AUTO SCRIPT - COMPLETO COM LOOP 4s + ANTI-AFK
-    Daily Diamonds, Codes, Gift, Select, Dungeon, Settings
+    Daily Diamonds, Codes, Gift, Select, Dungeon, Settings, AutoGamemodes
     Loop infinito a cada 4 segundos
     Anti-AFK pula a cada 1 minuto
 ]]
@@ -45,19 +45,22 @@ local CONFIG = {
     -- Settings
     Settings = {
         Enabled = true,
-        UltraPerformance = true  -- Ativa o modo ultraPerformance
+        UltraPerformance = true
     },
     
-    -- Auto Gamemodes
+    -- Auto Gamemodes (agora com dois modos)
     AutoGamemodes = {
         Enabled = true,
-        Mode = "Dungeon:2"  -- "Dungeon:1" ou "Dungeon:2"
+        Modes = {
+            "Dungeon:1",
+            "Dungeon:2"
+        }
     },
     
     -- Anti-AFK
     AntiAFK = {
         Enabled = true,
-        Interval = 60, -- Tempo em segundos (60 = 1 minuto)
+        Interval = 60,
         JumpHeight = 3
     }
 }
@@ -214,7 +217,7 @@ local function JoinDungeon(dungeonMode)
 end
 
 -- ============================================
--- FUNÇÃO: SET SETTINGS (NOVA)
+-- FUNÇÃO: SET SETTINGS
 -- ============================================
 
 local function SetUltraPerformance()
@@ -222,7 +225,7 @@ local function SetUltraPerformance()
 end
 
 -- ============================================
--- FUNÇÃO: AUTO GAMEMODES (NOVA)
+-- FUNÇÃO: AUTO GAMEMODES (COM DOIS MODOS)
 -- ============================================
 
 local function SetAutoGamemode(mode)
@@ -238,18 +241,21 @@ local function ExecuteAll()
     print("   🚀 EXECUTANDO FUNÇÕES")
     print("==========================================\n")
     
-    -- 1. Settings (NOVO)
+    -- 1. Settings
     if CONFIG.Settings.Enabled then
         print("📌 Configurando Ultra Performance...")
         SetUltraPerformance()
         task.wait(0.5)
     end
     
-    -- 2. Auto Gamemodes (NOVO)
+    -- 2. Auto Gamemodes (TODOS OS MODOS)
     if CONFIG.AutoGamemodes.Enabled then
-        print("📌 Configurando Auto Gamemode: " .. CONFIG.AutoGamemodes.Mode)
-        SetAutoGamemode(CONFIG.AutoGamemodes.Mode)
-        task.wait(0.5)
+        print("📌 Configurando Auto Gamemodes...")
+        for i, mode in ipairs(CONFIG.AutoGamemodes.Modes) do
+            print(string.format("   [%d/%d] %s", i, #CONFIG.AutoGamemodes.Modes, mode))
+            SetAutoGamemode(mode)
+            task.wait(0.5)
+        end
     end
     
     -- 3. Select
@@ -319,7 +325,7 @@ print("==========================================")
 print("")
 print("📌 Funções:")
 print("   ✅ Settings: Ultra Performance")
-print("   ✅ Auto Gamemodes: " .. CONFIG.AutoGamemodes.Mode)
+print("   ✅ Auto Gamemodes: Dungeon:1 e Dungeon:2")
 print("   ✅ Select Hawk")
 print("   ✅ Daily Diamonds (Start + Claim)")
 print("   ✅ Codes: UPDATE1")
