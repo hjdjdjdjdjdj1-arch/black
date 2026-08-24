@@ -39,16 +39,18 @@ local CONFIG = {
     -- Dungeon
     Dungeon = {
         Enabled = true,
-        Mode = "Dungeon:2"  -- "Dungeon:1" ou "Dungeon:2"
+        Mode = "Dungeon:2"
     },
     
-    -- Settings
+    -- Settings (ATUALIZADO)
     Settings = {
         Enabled = true,
-        UltraPerformance = true
+        UltraPerformance = true,
+        AutoClaimTimeRewards = true,
+        AutoClaimAchievements = true
     },
     
-    -- Auto Gamemodes (agora com dois modos)
+    -- Auto Gamemodes
     AutoGamemodes = {
         Enabled = true,
         Modes = {
@@ -217,15 +219,23 @@ local function JoinDungeon(dungeonMode)
 end
 
 -- ============================================
--- FUNÇÃO: SET SETTINGS
+-- FUNÇÃO: SET SETTINGS (ATUALIZADA)
 -- ============================================
 
 local function SetUltraPerformance()
     return FireRemote("settings/set", {"ultraPerformance", true})
 end
 
+local function SetAutoClaimTimeRewards()
+    return FireRemote("settings/set", {"autoClaimTimeRewards", true})
+end
+
+local function SetAutoClaimAchievements()
+    return FireRemote("settings/set", {"autoClaimAchievements", true})
+end
+
 -- ============================================
--- FUNÇÃO: AUTO GAMEMODES (COM DOIS MODOS)
+-- FUNÇÃO: AUTO GAMEMODES
 -- ============================================
 
 local function SetAutoGamemode(mode)
@@ -241,14 +251,30 @@ local function ExecuteAll()
     print("   🚀 EXECUTANDO FUNÇÕES")
     print("==========================================\n")
     
-    -- 1. Settings
+    -- 1. Settings (ATUALIZADO)
     if CONFIG.Settings.Enabled then
-        print("📌 Configurando Ultra Performance...")
-        SetUltraPerformance()
-        task.wait(0.5)
+        print("📌 Configurando Settings...")
+        
+        if CONFIG.Settings.UltraPerformance then
+            print("   ⚡ Ultra Performance")
+            SetUltraPerformance()
+            task.wait(0.3)
+        end
+        
+        if CONFIG.Settings.AutoClaimTimeRewards then
+            print("   ⏱️ Auto Claim Time Rewards")
+            SetAutoClaimTimeRewards()
+            task.wait(0.3)
+        end
+        
+        if CONFIG.Settings.AutoClaimAchievements then
+            print("   🏆 Auto Claim Achievements")
+            SetAutoClaimAchievements()
+            task.wait(0.3)
+        end
     end
     
-    -- 2. Auto Gamemodes (TODOS OS MODOS)
+    -- 2. Auto Gamemodes
     if CONFIG.AutoGamemodes.Enabled then
         print("📌 Configurando Auto Gamemodes...")
         for i, mode in ipairs(CONFIG.AutoGamemodes.Modes) do
@@ -324,7 +350,10 @@ print("   🚀 AUTO SCRIPT - LOOP 4s + ANTI-AFK")
 print("==========================================")
 print("")
 print("📌 Funções:")
-print("   ✅ Settings: Ultra Performance")
+print("   ✅ Settings:")
+print("      ⚡ Ultra Performance")
+print("      ⏱️ Auto Claim Time Rewards")
+print("      🏆 Auto Claim Achievements")
 print("   ✅ Auto Gamemodes: Dungeon:1 e Dungeon:2")
 print("   ✅ Select Hawk")
 print("   ✅ Daily Diamonds (Start + Claim)")
