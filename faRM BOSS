@@ -1,10 +1,12 @@
 --[[
-    AUTO SCRIPT - COMPLETO COM LOOP 4s
-    Daily Diamonds, Codes, Gift, Select, Dungeon
+    AUTO SCRIPT - COMPLETO COM LOOP 4s + ANTI-AFK
+    Daily Diamonds, Codes, Gift, Select, Dungeon, Settings
     Loop infinito a cada 4 segundos
+    Anti-AFK pula a cada 1 minuto
 ]]
 
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
 -- ============================================
@@ -38,6 +40,25 @@ local CONFIG = {
     Dungeon = {
         Enabled = true,
         Mode = "Dungeon:2"  -- "Dungeon:1" ou "Dungeon:2"
+    },
+    
+    -- Settings
+    Settings = {
+        Enabled = true,
+        UltraPerformance = true  -- Ativa o modo ultraPerformance
+    },
+    
+    -- Auto Gamemodes
+    AutoGamemodes = {
+        Enabled = true,
+        Mode = "Dungeon:2"  -- "Dungeon:1" ou "Dungeon:2"
+    },
+    
+    -- Anti-AFK
+    AntiAFK = {
+        Enabled = true,
+        Interval = 60, -- Tempo em segundos (60 = 1 minuto)
+        JumpHeight = 3
     }
 }
 
@@ -69,6 +90,63 @@ local function FireRemote(path, params)
     end
     
     return success
+end
+
+-- ============================================
+-- FUNÇÃO: ANTI-AFK
+-- ============================================
+
+local function AntiAFKJump()
+    local character = player.Character
+    if not character then return end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    if humanoid:GetState() == Enum.HumanoidStateType.Landed or 
+       humanoid:GetState() == Enum.HumanoidStateType.Running then
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        print("🦘 Anti-AFK: Pulou!")
+    end
+end
+
+local function AntiAFKMove()
+    local character = player.Character
+    if not character then return end
+    
+    local humanoid = character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+    
+    humanoid:MoveTo(Vector3.new(
+        rootPart.Position.X + 2,
+        rootPart.Position.Y,
+        rootPart.Position.Z
+    ))
+    
+    task.wait(0.5)
+    
+    humanoid:MoveTo(Vector3.new(
+        rootPart.Position.X - 2,
+        rootPart.Position.Y,
+        rootPart.Position.Z
+    ))
+    
+    print("🚶 Anti-AFK: Moveu!")
+end
+
+local function AntiAFKLoop()
+    while CONFIG.AntiAFK.Enabled do
+        task.wait(CONFIG.AntiAFK.Interval)
+        
+        if math.random(1, 3) == 1 then
+            AntiAFKMove()
+        else
+            AntiAFKJump()
+        end
+    end
 end
 
 -- ============================================
@@ -128,11 +206,27 @@ local function SendGift(targetId, product)
 end
 
 -- ============================================
--- FUNÇÃO: JOIN DUNGEON (NOVA)
+-- FUNÇÃO: JOIN DUNGEON
 -- ============================================
 
 local function JoinDungeon(dungeonMode)
     return FireRemote("gamemodes/join", {dungeonMode})
+end
+
+-- ============================================
+-- FUNÇÃO: SET SETTINGS (NOVA)
+-- ============================================
+
+local function SetUltraPerformance()
+    return FireRemote("settings/set", {"ultraPerformance", true})
+end
+
+-- ============================================
+-- FUNÇÃO: AUTO GAMEMODES (NOVA)
+-- ============================================
+
+local function SetAutoGamemode(mode)
+    return FireRemote("autoGamemodes/set", {mode, "join"})
 end
 
 -- ============================================
@@ -144,14 +238,28 @@ local function ExecuteAll()
     print("   🚀 EXECUTANDO FUNÇÕES")
     print("==========================================\n")
     
-    -- 1. Select
+    -- 1. Settings (NOVO)
+    if CONFIG.Settings.Enabled then
+        print("📌 Configurando Ultra Performance...")
+        SetUltraPerformance()
+        task.wait(0.5)
+    end
+    
+    -- 2. Auto Gamemodes (NOVO)
+    if CONFIG.AutoGamemodes.Enabled then
+        print("📌 Configurando Auto Gamemode: " .. CONFIG.AutoGamemodes.Mode)
+        SetAutoGamemode(CONFIG.AutoGamemodes.Mode)
+        task.wait(0.5)
+    end
+    
+    -- 3. Select
     if CONFIG.Select.Enabled then
         print("📌 Select Hawk...")
         SelectHawk()
         task.wait(0.5)
     end
     
-    -- 2. Daily Diamonds
+    -- 4. Daily Diamonds
     if CONFIG.DailyDiamonds then
         print("📌 Daily Diamonds...")
         StartDailyDiamonds()
@@ -162,7 +270,7 @@ local function ExecuteAll()
         task.wait(0.5)
     end
     
-    -- 3. Codes
+    -- 5. Codes
     if #CONFIG.Codes > 0 then
         print("📌 Códigos...")
         for i, code in ipairs(CONFIG.Codes) do
@@ -172,7 +280,7 @@ local function ExecuteAll()
         end
     end
     
-    -- 4. Gift
+    -- 6. Gift
     if CONFIG.Gift.Enabled then
         print("📌 Gift...")
         SetGiftTarget(CONFIG.Gift.TargetId)
@@ -181,7 +289,7 @@ local function ExecuteAll()
         task.wait(0.5)
     end
     
-    -- 5. Dungeon (NOVA)
+    -- 7. Dungeon
     if CONFIG.Dungeon.Enabled then
         print("📌 Entrando na Dungeon: " .. CONFIG.Dungeon.Mode)
         JoinDungeon(CONFIG.Dungeon.Mode)
@@ -192,19 +300,32 @@ local function ExecuteAll()
 end
 
 -- ============================================
+-- INICIAR ANTI-AFK
+-- ============================================
+
+if CONFIG.AntiAFK.Enabled then
+    print("🦘 Anti-AFK ATIVADO!")
+    print("⏱️ Pulará a cada " .. CONFIG.AntiAFK.Interval .. " segundos")
+    task.spawn(AntiAFKLoop)
+end
+
+-- ============================================
 -- LOOP PRINCIPAL (4 SEGUNDOS)
 -- ============================================
 
 print("==========================================")
-print("   🚀 AUTO SCRIPT - LOOP 4s")
+print("   🚀 AUTO SCRIPT - LOOP 4s + ANTI-AFK")
 print("==========================================")
 print("")
 print("📌 Funções:")
+print("   ✅ Settings: Ultra Performance")
+print("   ✅ Auto Gamemodes: " .. CONFIG.AutoGamemodes.Mode)
 print("   ✅ Select Hawk")
 print("   ✅ Daily Diamonds (Start + Claim)")
 print("   ✅ Codes: UPDATE1")
 print("   ✅ Gift")
 print("   ✅ Dungeon: " .. CONFIG.Dungeon.Mode)
+print("   ✅ Anti-AFK: " .. CONFIG.AntiAFK.Interval .. "s")
 print("")
 print("🔄 Loop a cada 4 segundos")
 print("==========================================\n")
