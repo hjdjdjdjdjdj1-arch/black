@@ -1,6 +1,6 @@
 --[[
     AUTO SCRIPT - COMPLETO COM LOOP 4s + ANTI-AFK
-    Daily Diamonds, Codes, Gift, Select, Dungeon, Settings, AutoGamemodes
+    Daily Diamonds, Codes, Select, Dungeon, Settings, AutoGamemodes
     Loop infinito a cada 4 segundos
     Anti-AFK pula a cada 1 minuto
 ]]
@@ -20,14 +20,6 @@ local CONFIG = {
     -- Codes
     Codes = {
         "UPDATE1",
-    },
-    
-    -- Gift (ATUALIZADO)
-    Gift = {
-        Enabled = true,
-        TargetId = 11218019511,
-        TargetName = "BH_LC0A2",
-        Product = "PotionPower"
     },
     
     -- Select
@@ -195,22 +187,6 @@ local function RedeemCode(code)
 end
 
 -- ============================================
--- FUNÇÃO: SET GIFT TARGET (ATUALIZADO)
--- ============================================
-
-local function SetGiftTarget(targetId)
-    return FireRemote("shop/setGiftTarget", {targetId})
-end
-
--- ============================================
--- FUNÇÃO: SEND GIFT (ATUALIZADO)
--- ============================================
-
-local function SendGift(targetId, product)
-    return FireRemote("shop/diamondGift", {targetId, "Products", product})
-end
-
--- ============================================
 -- FUNÇÃO: JOIN DUNGEON
 -- ============================================
 
@@ -312,16 +288,7 @@ local function ExecuteAll()
         end
     end
     
-    -- 6. Gift (ATUALIZADO)
-    if CONFIG.Gift.Enabled then
-        print("📌 Gift para: " .. CONFIG.Gift.TargetName)
-        SetGiftTarget(CONFIG.Gift.TargetId)
-        task.wait(0.5)
-        SendGift(CONFIG.Gift.TargetId, CONFIG.Gift.Product)
-        task.wait(0.5)
-    end
-    
-    -- 7. Dungeon
+    -- 6. Dungeon
     if CONFIG.Dungeon.Enabled then
         print("📌 Entrando na Dungeon: " .. CONFIG.Dungeon.Mode)
         JoinDungeon(CONFIG.Dungeon.Mode)
@@ -358,7 +325,6 @@ print("   ✅ Auto Gamemodes: Dungeon:1 e Dungeon:2")
 print("   ✅ Select Hawk")
 print("   ✅ Daily Diamonds (Start + Claim)")
 print("   ✅ Codes: UPDATE1")
-print("   ✅ Gift: " .. CONFIG.Gift.TargetName)
 print("   ✅ Dungeon: " .. CONFIG.Dungeon.Mode)
 print("   ✅ Anti-AFK: " .. CONFIG.AntiAFK.Interval .. "s")
 print("")
