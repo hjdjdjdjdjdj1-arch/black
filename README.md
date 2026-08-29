@@ -1,1 +1,356 @@
-# black
+--[[
+    AUTO TP - 22 COORDENADAS COM VELOCIDADE
+    Teleporta entre 22 pontos com velocidade ajustável em ms
+    TECLA: K para abrir/fechar UI
+]]
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+-- ============================================
+-- COORDENADAS (22 PONTOS)
+-- ============================================
+local Coordinates = {
+    {name = "Ponto 1", pos = Vector3.new(-556.7, 4.2, 315.4)},
+    {name = "Ponto 2", pos = Vector3.new(1188.9, 4.9, 1416.3)},
+    {name = "Ponto 3", pos = Vector3.new(1186.3, 4.9, 1501.1)},
+    {name = "Ponto 4", pos = Vector3.new(1192.0, 4.9, 1590.0)},
+    {name = "Ponto 5", pos = Vector3.new(-551.6, 4.2, 327.4)},
+    {name = "Ponto 6", pos = Vector3.new(1128.8, 4.9, 1355.2)},
+    {name = "Ponto 7", pos = Vector3.new(1153.0, 4.9, 1278.8)},
+    {name = "Ponto 8", pos = Vector3.new(1198.1, 4.9, 1183.3)},
+    {name = "Ponto 9", pos = Vector3.new(-557.6, 4.3, 320.9)},
+    {name = "Ponto 10", pos = Vector3.new(1387.1, 14.2, 1229.4)},
+    {name = "Ponto 11", pos = Vector3.new(1348.7, 14.2, 1380.8)},
+    {name = "Ponto 12", pos = Vector3.new(1320.8, 14.2, 1319.4)},
+    {name = "Ponto 13", pos = Vector3.new(1400.2, 14.2, 1481.6)},
+    {name = "Ponto 14", pos = Vector3.new(1375.2, 14.2, 1558.0)},
+    {name = "Ponto 15", pos = Vector3.new(1428.1, 14.2, 1642.3)},
+    {name = "Ponto 16", pos = Vector3.new(-555.2, 4.2, 315.8)},
+    {name = "Ponto 17", pos = Vector3.new(983.0, 14.4, 1535.9)},
+    {name = "Ponto 18", pos = Vector3.new(997.3, 14.2, 1643.0)},
+    {name = "Ponto 19", pos = Vector3.new(949.2, 14.2, 1466.7)},
+    {name = "Ponto 20", pos = Vector3.new(946.5, 14.2, 1390.7)},
+    {name = "Ponto 21", pos = Vector3.new(1043.4, 14.5, 1237.8)},
+    {name = "Ponto 22", pos = Vector3.new(-558.0, 4.3, 321.0)}
+}
+
+local isRunning = false
+local currentIndex = 1
+local tpSpeed = 1000 -- Velocidade em milissegundos (padrão: 1s)
+
+-- ============================================
+-- FUNÇÃO PARA TELEPORTAR
+-- ============================================
+
+local function TeleportTo(pos)
+    local character = player.Character
+    if not character then return false end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart") or 
+                     character:FindFirstChild("Torso") or 
+                     character:FindFirstChild("UpperTorso")
+    
+    if not rootPart then return false end
+    
+    rootPart.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))
+    return true
+end
+
+-- ============================================
+-- FUNÇÃO PARA ATIVAR/DESATIVAR
+-- ============================================
+
+local function ToggleTP()
+    isRunning = not isRunning
+    
+    if isRunning then
+        print("🔄 Auto TP ATIVADO!")
+        print("📍 " .. #Coordinates .. " pontos configurados")
+        print("⏱️ Velocidade: " .. tpSpeed .. "ms")
+        
+        task.spawn(function()
+            while isRunning do
+                local coord = Coordinates[currentIndex]
+                print(string.format("🚀 TP para %s (%.1f, %.1f, %.1f)", 
+                    coord.name, coord.pos.X, coord.pos.Y, coord.pos.Z))
+                
+                TeleportTo(coord.pos)
+                
+                currentIndex = currentIndex + 1
+                if currentIndex > #Coordinates then
+                    currentIndex = 1
+                end
+                
+                task.wait(tpSpeed / 1000)
+            end
+        end)
+    else
+        print("⏹️ Auto TP DESATIVADO!")
+    end
+end
+
+-- ============================================
+-- UI
+-- ============================================
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AutoTP"
+ScreenGui.Parent = player.PlayerGui
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 450, 0, 580)
+MainFrame.Position = UDim2.new(0.5, -225, 0.5, -290)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+MainFrame.BackgroundTransparency = 0.1
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = true
+MainFrame.Parent = ScreenGui
+
+local FrameCorner = Instance.new("UICorner")
+FrameCorner.CornerRadius = UDim.new(0, 12)
+FrameCorner.Parent = MainFrame
+
+-- Título
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+Title.BackgroundTransparency = 0.1
+Title.BorderSizePixel = 0
+Title.Text = "🚀 AUTO TP - 22 PONTOS"
+Title.TextColor3 = Color3.fromRGB(255, 200, 100)
+Title.TextSize = 16
+Title.Font = Enum.Font.GothamBold
+Title.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 12)
+TitleCorner.Parent = Title
+
+-- Fechar
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseButton.BackgroundTransparency = 0.2
+CloseButton.BorderSizePixel = 0
+CloseButton.Text = "✕"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 16
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = MainFrame
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseButton
+
+-- Status
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, -20, 0, 30)
+StatusLabel.Position = UDim2.new(0, 10, 0, 50)
+StatusLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+StatusLabel.BackgroundTransparency = 0.1
+StatusLabel.BorderSizePixel = 0
+StatusLabel.Text = "STATUS: DESLIGADO"
+StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+StatusLabel.TextSize = 14
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.Parent = MainFrame
+
+local StatusCorner = Instance.new("UICorner")
+StatusCorner.CornerRadius = UDim.new(0, 6)
+StatusCorner.Parent = StatusLabel
+
+-- Velocidade
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Size = UDim2.new(0, 150, 0, 20)
+SpeedLabel.Position = UDim2.new(0, 10, 0, 95)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Text = "⚡ Velocidade: 1000ms"
+SpeedLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
+SpeedLabel.TextSize = 13
+SpeedLabel.Font = Enum.Font.Gotham
+SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+SpeedLabel.Parent = MainFrame
+
+local SpeedInput = Instance.new("TextBox")
+SpeedInput.Size = UDim2.new(0, 100, 0, 22)
+SpeedInput.Position = UDim2.new(0.7, -50, 0, 92)
+SpeedInput.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+SpeedInput.BackgroundTransparency = 0.1
+SpeedInput.BorderSizePixel = 0
+SpeedInput.Text = "1000"
+SpeedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedInput.TextSize = 13
+SpeedInput.Font = Enum.Font.Gotham
+SpeedInput.PlaceholderText = "ms"
+SpeedInput.Parent = MainFrame
+
+local SpeedCorner = Instance.new("UICorner")
+SpeedCorner.CornerRadius = UDim.new(0, 6)
+SpeedCorner.Parent = SpeedInput
+
+SpeedInput.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local value = tonumber(SpeedInput.Text)
+        if value and value > 0 then
+            tpSpeed = value
+            SpeedLabel.Text = "⚡ Velocidade: " .. value .. "ms"
+            print("⚡ Velocidade ajustada para: " .. value .. "ms")
+        else
+            SpeedInput.Text = tostring(tpSpeed)
+        end
+    end
+end)
+
+-- Info pontos
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Size = UDim2.new(1, -20, 0, 20)
+InfoLabel.Position = UDim2.new(0, 10, 0, 125)
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Text = "📌 " .. #Coordinates .. " pontos configurados"
+InfoLabel.TextColor3 = Color3.fromRGB(150, 150, 200)
+InfoLabel.TextSize = 12
+InfoLabel.Font = Enum.Font.Gotham
+InfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+InfoLabel.Parent = MainFrame
+
+-- Lista de coordenadas
+local ListFrame = Instance.new("ScrollingFrame")
+ListFrame.Size = UDim2.new(1, -20, 0, 290)
+ListFrame.Position = UDim2.new(0, 10, 0, 150)
+ListFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+ListFrame.BackgroundTransparency = 0.2
+ListFrame.BorderSizePixel = 0
+ListFrame.CanvasSize = UDim2.new(0, 0, 0, #Coordinates * 24)
+ListFrame.ScrollBarThickness = 4
+ListFrame.Parent = MainFrame
+
+local ListCorner = Instance.new("UICorner")
+ListCorner.CornerRadius = UDim.new(0, 8)
+ListCorner.Parent = ListFrame
+
+-- Criar lista de coordenadas
+for i, coord in ipairs(Coordinates) do
+    local yPos = (i - 1) * 24 + 3
+    
+    local coordLabel = Instance.new("TextLabel")
+    coordLabel.Size = UDim2.new(1, -10, 0, 20)
+    coordLabel.Position = UDim2.new(0, 5, 0, yPos)
+    coordLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    coordLabel.BackgroundTransparency = 0.3
+    coordLabel.BorderSizePixel = 0
+    coordLabel.Text = string.format("%d. (%.0f, %.0f, %.0f)", i, coord.pos.X, coord.pos.Y, coord.pos.Z)
+    coordLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
+    coordLabel.TextSize = 10
+    coordLabel.Font = Enum.Font.Gotham
+    coordLabel.TextXAlignment = Enum.TextXAlignment.Left
+    coordLabel.Parent = ListFrame
+    
+    local labelCorner = Instance.new("UICorner")
+    labelCorner.CornerRadius = UDim.new(0, 4)
+    labelCorner.Parent = coordLabel
+end
+
+-- Botão Ligar/Desligar
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 180, 0, 40)
+ToggleButton.Position = UDim2.new(0.5, -90, 0, 460)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+ToggleButton.BackgroundTransparency = 0.2
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Text = "▶ LIGAR TP"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 14
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.Parent = MainFrame
+
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 8)
+BtnCorner.Parent = ToggleButton
+
+-- Botão TP manual
+local ManualButton = Instance.new("TextButton")
+ManualButton.Size = UDim2.new(0, 180, 0, 30)
+ManualButton.Position = UDim2.new(0.5, -90, 0, 510)
+ManualButton.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
+ManualButton.BackgroundTransparency = 0.2
+ManualButton.BorderSizePixel = 0
+ManualButton.Text = "⏭ PRÓXIMO PONTO"
+ManualButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ManualButton.TextSize = 12
+ManualButton.Font = Enum.Font.GothamBold
+ManualButton.Parent = MainFrame
+
+local ManualCorner = Instance.new("UICorner")
+ManualCorner.CornerRadius = UDim.new(0, 8)
+ManualCorner.Parent = ManualButton
+
+-- ============================================
+-- EVENTOS
+-- ============================================
+
+ToggleButton.MouseButton1Click:Connect(function()
+    ToggleTP()
+    
+    if isRunning then
+        StatusLabel.Text = "STATUS: LIGADO ✅"
+        StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+        ToggleButton.Text = "⏹ DESLIGAR"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    else
+        StatusLabel.Text = "STATUS: DESLIGADO ❌"
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        ToggleButton.Text = "▶ LIGAR TP"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    end
+end)
+
+ManualButton.MouseButton1Click:Connect(function()
+    if isRunning then
+        print("⚠️ Desligue o Auto TP primeiro!")
+        return
+    end
+    
+    local coord = Coordinates[currentIndex]
+    print(string.format("🚀 TP manual para %s", coord.name))
+    TeleportTo(coord.pos)
+    
+    currentIndex = currentIndex + 1
+    if currentIndex > #Coordinates then
+        currentIndex = 1
+    end
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+end)
+
+-- Tecla K
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.K then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+-- ============================================
+-- INICIALIZAÇÃO
+-- ============================================
+
+print("==========================================")
+print("   🚀 AUTO TP - 22 PONTOS")
+print("==========================================")
+print("")
+print("📌 Pressione K para abrir a UI")
+print("📌 " .. #Coordinates .. " pontos configurados")
+print("📌 Ajuste a velocidade em ms")
+print("==========================================")
+
+for i, coord in ipairs(Coordinates) do
+    print(string.format("   %d. %.1f, %.1f, %.1f", i, coord.pos.X, coord.pos.Y, coord.pos.Z))
+end
+print("==========================================")
