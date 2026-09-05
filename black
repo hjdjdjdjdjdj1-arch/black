@@ -1,6 +1,7 @@
+
 --[[
-    AUTO TP - 10 COORDENADAS COM VELOCIDADE
-    Teleporta entre 10 pontos com velocidade ajustável em ms
+    AUTO TP - 13 COORDENADAS COM VELOCIDADE
+    Teleporta entre 13 pontos com velocidade ajustável em ms
     TECLA: K para abrir/fechar UI
 ]]
 
@@ -9,19 +10,22 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
 -- ============================================
--- COORDENADAS (10 PONTOS)
+-- COORDENADAS (13 PONTOS)
 -- ============================================
 local Coordinates = {
-    {name = "Ponto 1", pos = Vector3.new(-6084.4, 6.7, 392.0)},
-    {name = "Ponto 2", pos = Vector3.new(-6194.1, 4.2, 416.3)},
-    {name = "Ponto 3", pos = Vector3.new(-6421.3, 4.2, 414.5)},
-    {name = "Ponto 4", pos = Vector3.new(-6298.3, 4.2, 414.0)},
-    {name = "Ponto 5", pos = Vector3.new(-6213.5, 4.2, 320.9)},
-    {name = "Ponto 6", pos = Vector3.new(-6146.6, 4.2, 308.4)},
-    {name = "Ponto 7", pos = Vector3.new(-6017.8, 4.2, 311.8)},
-    {name = "Ponto 8", pos = Vector3.new(-6401.6, 4.2, 342.7)},
-    {name = "Ponto 9", pos = Vector3.new(-6383.4, 4.2, 276.9)},
-    {name = "Ponto 10", pos = Vector3.new(-6298.5, 4.2, 333.0)}
+    {name = "Ponto 1", pos = Vector3.new(-35.7, 151.4, 2650.4)},
+    {name = "Ponto 2", pos = Vector3.new(-120.6, 151.4, 2627.9)},
+    {name = "Ponto 3", pos = Vector3.new(-232.1, 151.3, 2613.0)},
+    {name = "Ponto 4", pos = Vector3.new(-211.1, 151.3, 2762.4)},
+    {name = "Ponto 5", pos = Vector3.new(-83.1, 152.3, 2868.5)},
+    {name = "Ponto 6", pos = Vector3.new(-105.9, 151.3, 2976.4)},
+    {name = "Ponto 7", pos = Vector3.new(-82.4, 151.3, 3050.7)},
+    {name = "Ponto 8", pos = Vector3.new(-130.2, 151.3, 3140.5)},
+    {name = "Ponto 9", pos = Vector3.new(-218.1, 151.3, 2963.3)},
+    {name = "Ponto 10", pos = Vector3.new(-202.8, 151.4, 2747.6)},
+    {name = "Ponto 11", pos = Vector3.new(-98.9, 151.3, 2709.4)},
+    {name = "Ponto 12", pos = Vector3.new(-121.6, 151.4, 2627.1)},
+    {name = "Ponto 13", pos = Vector3.new(-231.7, 151.3, 2610.2)}
 }
 
 local isRunning = false
@@ -89,8 +93,8 @@ ScreenGui.Parent = player.PlayerGui
 ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 420, 0, 480)
-MainFrame.Position = UDim2.new(0.5, -210, 0.5, -240)
+MainFrame.Size = UDim2.new(0, 420, 0, 520)
+MainFrame.Position = UDim2.new(0.5, -210, 0.5, -260)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 MainFrame.BackgroundTransparency = 0.1
 MainFrame.BorderSizePixel = 0
@@ -108,7 +112,7 @@ Title.Position = UDim2.new(0, 0, 0, 0)
 Title.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
 Title.BackgroundTransparency = 0.1
 Title.BorderSizePixel = 0
-Title.Text = "🚀 AUTO TP - 10 PONTOS"
+Title.Text = "🚀 AUTO TP - 13 PONTOS"
 Title.TextColor3 = Color3.fromRGB(255, 200, 100)
 Title.TextSize = 16
 Title.Font = Enum.Font.GothamBold
@@ -208,12 +212,12 @@ InfoLabel.Parent = MainFrame
 
 -- Lista de coordenadas
 local ListFrame = Instance.new("ScrollingFrame")
-ListFrame.Size = UDim2.new(1, -20, 0, 210)
+ListFrame.Size = UDim2.new(1, -20, 0, 240)
 ListFrame.Position = UDim2.new(0, 10, 0, 150)
 ListFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
 ListFrame.BackgroundTransparency = 0.2
 ListFrame.BorderSizePixel = 0
-ListFrame.CanvasSize = UDim2.new(0, 0, 0, #Coordinates * 28)
+ListFrame.CanvasSize = UDim2.new(0, 0, 0, #Coordinates * 24)
 ListFrame.ScrollBarThickness = 4
 ListFrame.Parent = MainFrame
 
@@ -223,17 +227,17 @@ ListCorner.Parent = ListFrame
 
 -- Criar lista de coordenadas
 for i, coord in ipairs(Coordinates) do
-    local yPos = (i - 1) * 28 + 5
+    local yPos = (i - 1) * 24 + 3
     
     local coordLabel = Instance.new("TextLabel")
-    coordLabel.Size = UDim2.new(1, -10, 0, 22)
+    coordLabel.Size = UDim2.new(1, -10, 0, 20)
     coordLabel.Position = UDim2.new(0, 5, 0, yPos)
     coordLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
     coordLabel.BackgroundTransparency = 0.3
     coordLabel.BorderSizePixel = 0
     coordLabel.Text = string.format("%d. (%.0f, %.0f, %.0f)", i, coord.pos.X, coord.pos.Y, coord.pos.Z)
     coordLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
-    coordLabel.TextSize = 11
+    coordLabel.TextSize = 10
     coordLabel.Font = Enum.Font.Gotham
     coordLabel.TextXAlignment = Enum.TextXAlignment.Left
     coordLabel.Parent = ListFrame
@@ -246,7 +250,7 @@ end
 -- Botão Ligar/Desligar
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Size = UDim2.new(0, 180, 0, 40)
-ToggleButton.Position = UDim2.new(0.5, -90, 0, 380)
+ToggleButton.Position = UDim2.new(0.5, -90, 0, 410)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
 ToggleButton.BackgroundTransparency = 0.2
 ToggleButton.BorderSizePixel = 0
@@ -260,10 +264,10 @@ local BtnCorner = Instance.new("UICorner")
 BtnCorner.CornerRadius = UDim.new(0, 8)
 BtnCorner.Parent = ToggleButton
 
--- Botão TP manual (ir para o próximo ponto)
+-- Botão TP manual
 local ManualButton = Instance.new("TextButton")
 ManualButton.Size = UDim2.new(0, 180, 0, 30)
-ManualButton.Position = UDim2.new(0.5, -90, 0, 428)
+ManualButton.Position = UDim2.new(0.5, -90, 0, 458)
 ManualButton.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
 ManualButton.BackgroundTransparency = 0.2
 ManualButton.BorderSizePixel = 0
@@ -330,7 +334,7 @@ end)
 -- ============================================
 
 print("==========================================")
-print("   🚀 AUTO TP - 10 PONTOS")
+print("   🚀 AUTO TP - 13 PONTOS")
 print("==========================================")
 print("")
 print("📌 Pressione K para abrir a UI")
